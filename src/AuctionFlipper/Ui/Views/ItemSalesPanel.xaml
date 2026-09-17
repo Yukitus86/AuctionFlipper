@@ -1,0 +1,159 @@
+<UserControl x:Class="AuctionFlipper.Ui.Views.ItemSalesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:AuctionFlipper.Ui"
+             xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             Width="384">
+
+    <!--
+        The sale history of one item, opened by clicking its row on the tape or in the item table.
+
+        It is one control used by both screens rather than the same markup twice, and it inherits
+        the window's view model through the normal DataContext, so neither host has to wire it up.
+
+        Everything here comes out of the tape the tool has already accumulated - opening it spends
+        no API budget, which is why it can be opened as freely as the user likes.
+    -->
+
+    <UserControl.Resources>
+        <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
+            BorderThickness="1" CornerRadius="{StaticResource R.Large}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- header: which item this is, and what the tool makes of it -->
+            <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="7,7,0,0"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1"
+                    Padding="14,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ctl:ItemChip Width="38" Height="38" Corner="7"
+                                  Hue="{Binding SalesHue}"
+                                  ItemId="{Binding SalesItemIcon}"
+                                  Monogram="{Binding SalesMonogram}"
+                                  VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{ui:Tr SalesPopupTitle}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding SalesItemName}" FontWeight="SemiBold" FontSize="14"
+                                   Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding SalesSummary}" Style="{StaticResource T.MonoMuted}"
+                                   FontSize="10.5" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <Button Grid.Column="2" Content="&#x2715;" Style="{StaticResource Btn.Pin}"
+                            FontSize="12" VerticalAlignment="Top" Margin="8,-2,-4,0"
+                            Command="{Binding CloseItemSalesCommand}"
+                            ToolTip="{ui:Tr CloseTip}" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="14,9,14,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="46" />
+                    <ColumnDefinition Width="36" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="72" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{ui:Tr ColAgo}" Style="{StaticResource T.Label}" />
+                <TextBlock Grid.Column="1" Text="{ui:Tr ColQty}" Style="{StaticResource T.Label}" />
+                <TextBlock Grid.Column="2" Text="{ui:Tr ColTotal}" Style="{StaticResource T.Label}" />
+                <TextBlock Grid.Column="3" Text="{ui:Tr ColEach}" Style="{StaticResource T.Label}" />
+                <TextBlock Grid.Column="4" Text="{ui:Tr ColVsValue}" Style="{StaticResource T.Label}"
+                           TextAlignment="Right" />
+            </Grid>
+
+            <!-- A quiet item can have no history at all yet, which is a state worth explaining
+                 rather than an empty box. -->
+            <TextBlock Grid.Row="2" Text="{Binding SalesEmptyText}" TextWrapping="Wrap" FontSize="11.5"
+                       Foreground="{StaticResource B.TextDim}" TextAlignment="Center"
+                       Margin="22,18,22,22" VerticalAlignment="Top"
+                       Visibility="{Binding SalesEmptyText, Converter={StaticResource BoolToVis}}" />
+
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding ItemSales}" Margin="8,0,8,10"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          VirtualizingPanel.ScrollUnit="Pixel">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel VirtualizationMode="Recycling" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="26" Margin="6,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="46" />
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="72" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding AgoText}" Style="{StaticResource T.MonoMuted}"
+                                       FontSize="10.5" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding CountText}"
+                                       Style="{StaticResource T.MonoMuted}" FontSize="10.5"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{Binding PriceText}"
+                                       Style="{StaticResource T.Mono}" FontSize="11.5"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="{Binding UnitText}"
+                                       Style="{StaticResource T.MonoMuted}" FontSize="11.5"
+                                       VerticalAlignment="Center" />
+
+                            <!-- The same green/red reading as the tape: this is how a price the
+                                 board quotes is checked against what the item actually fetched. -->
+                            <TextBlock Grid.Column="4" Text="{Binding VersusValue}" FontSize="11"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
+                                        <Setter Property="Foreground" Value="{StaticResource B.TextDim}" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasValue}" Value="True" />
+                                                    <Condition Binding="{Binding AboveValue}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="{StaticResource B.Profit}" />
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasValue}" Value="True" />
+                                                    <Condition Binding="{Binding AboveValue}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="{StaticResource B.Loss}" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Border>
+</UserControl>

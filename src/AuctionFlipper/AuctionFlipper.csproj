@@ -12,9 +12,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>icon.ico</ApplicationIcon>
 
-    <Version>1.4.0</Version>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <Version>1.5.0</Version>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <Product>Auction Flipper</Product>
     <AssemblyTitle>Auction Flipper</AssemblyTitle>
     <Description>Tracks the DonutSMP auction house and ranks profitable flips.</Description>
@@ -26,6 +26,21 @@
     <!-- App.xaml is compiled as a Page so Program.cs can own Main and offer a console self-test. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <StartupObject>AuctionFlipper.Program</StartupObject>
+
+    <!-- One file, and nothing beside it.
+
+         A single-file publish leaves WPF's five native libraries (wpfgfx, PresentationNative,
+         D3DCompiler, PenImc, vcruntime) loose in the output folder unless they are told to come
+         along, and ships a .pdb next to the executable. Neither belongs in something that gets
+         copied to a desktop and double-clicked: the loose DLLs look like the app is broken if one
+         is missing, and a folder of six files invites moving the exe on its own, which breaks it.
+         Symbols are embedded in the binary instead, so a stack trace still names lines. -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
 
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>

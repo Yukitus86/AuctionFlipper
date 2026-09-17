@@ -502,7 +502,21 @@
             </GridSplitter.Template>
         </GridSplitter>
 
-        <!-- detail panel -->
+        <!--
+            Detail panel.
+
+            Built like the hover card rather than as a plain column of text: a shaded header band
+            carrying the picture, the name and the grade, then hairline-separated sections below
+            it. The panel stays open while the board reorders underneath, so it has to say what it
+            is showing at a glance, and a wall of unbroken text on one background does not.
+
+            The header is outside the ScrollViewer on purpose - scroll down through a long ask
+            ladder and the item it belongs to is still on screen.
+
+            The four header bindings go through Selected rather than through copies on the view
+            model, because the row object is updated in place on every refresh and already raises
+            change notifications for all of them.
+        -->
         <Border Grid.Row="1" Grid.Column="2" Margin="0,0,12,12"
                 Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
                 BorderThickness="1" CornerRadius="{StaticResource R.Large}">
@@ -513,113 +527,160 @@
                            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis},
                                         ConverterParameter=invert}" />
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Margin="16">
+                <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                        <!--
-                            Same header as the hover card: the item's own picture on the left, the
-                            grade on the right. The panel outlives the hover card - it stays open
-                            while the board reorders underneath it - so without these two it was
-                            the one place the item had to be identified by reading its name.
-
-                            Bound through Selected rather than through copies on the view model,
-                            because the row object is updated in place on every refresh and already
-                            raises change notifications for all four.
-                        -->
-                        <Grid Margin="0,0,0,12">
+                    <!-- header: what it is, and the verdict -->
+                    <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="7,7,0,0"
+                            BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1"
+                            Padding="14,12">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ctl:ItemChip Width="40" Height="40" Corner="7"
+                            <ctl:ItemChip Width="42" Height="42" Corner="7"
                                           Hue="{Binding Selected.Hue}"
                                           ItemId="{Binding Selected.ItemId}"
                                           Monogram="{Binding Selected.Monogram}"
-                                          VerticalAlignment="Top" Margin="0,1,12,0" />
+                                          VerticalAlignment="Center" Margin="0,0,12,0" />
 
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="{Binding DetailTitle}" FontSize="15" FontWeight="SemiBold"
-                                           TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource T.MonoMuted}"
-                                           FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Selected.ItemName}" FontWeight="SemiBold"
+                                               FontSize="15" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Selected.CountText}"
+                                               Style="{StaticResource T.MonoMuted}" Margin="8,4,0,0" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="{ui:Tr TipSeller}" Style="{StaticResource T.Label}" />
+                                    <TextBlock Text="{Binding Selected.SellerName}"
+                                               Style="{StaticResource T.MonoMuted}" FontSize="10"
+                                               Margin="6,0,0,0" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Selected.AgeText}"
+                                               Style="{StaticResource T.MonoMuted}" FontSize="10"
+                                               Margin="10,0,0,0" />
+                                </StackPanel>
                             </StackPanel>
 
-                            <TextBlock Grid.Column="2" Text="{Binding Selected.GradeText}"
-                                       FontFamily="{StaticResource F.Mono}" FontSize="26"
-                                       FontWeight="Bold" VerticalAlignment="Top" Margin="10,-3,0,0"
-                                       Foreground="{Binding Selected.GradeBrush}" />
+                            <!-- The grade reads as a stamp rather than a stray letter: same colour
+                                 as the row's grade spine, outlined so it holds its own corner. -->
+                            <Border Grid.Column="2" Margin="10,0,0,0" Padding="10,1,10,3"
+                                    Background="{StaticResource B.Bg}" CornerRadius="{StaticResource R.Medium}"
+                                    BorderBrush="{Binding Selected.GradeBrush}" BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Selected.GradeText}"
+                                           FontFamily="{StaticResource F.Mono}" FontSize="22"
+                                           FontWeight="Bold" Foreground="{Binding Selected.GradeBrush}" />
+                            </Border>
                         </Grid>
+                    </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Button Content="{ui:Tr CopySearch}" Style="{StaticResource Btn.Accent}"
-                                    Command="{Binding CopySearchCommand}"
-                                    ToolTip="{ui:Tr CopySearchTip}" />
-                            <Button Content="{ui:Tr RefreshItem}" Margin="7,0,0,0"
-                                    Command="{Binding RefreshItemCommand}"
-                                    ToolTip="{ui:Tr RefreshItemTip}" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+
+                            <!-- what the item is worth, and the two things you can do about it -->
+                            <StackPanel Margin="14,11,14,12">
+                                <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource T.MonoMuted}"
+                                           FontSize="10.5" TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal" Margin="0,11,0,0">
+                                    <Button Content="{ui:Tr CopySearch}" Style="{StaticResource Btn.Accent}"
+                                            Command="{Binding CopySearchCommand}"
+                                            ToolTip="{ui:Tr CopySearchTip}" />
+                                    <Button Content="{ui:Tr RefreshItem}" Margin="7,0,0,0"
+                                            Command="{Binding RefreshItemCommand}"
+                                            ToolTip="{ui:Tr RefreshItemTip}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0" />
+
+                            <StackPanel Margin="14,11,14,12">
+                                <TextBlock Text="{ui:Tr PriceHistory}" Style="{StaticResource T.Label}" />
+                                <Border Background="{StaticResource B.Bg}" BorderBrush="{StaticResource B.Border}"
+                                        BorderThickness="1" CornerRadius="{StaticResource R.Small}"
+                                        Margin="0,6,0,0" Padding="6">
+                                    <ctl:Sparkline Height="62" Points="{Binding SparkPoints}"
+                                                   Reference="{Binding DetailFairValue}"
+                                                   Stroke="{StaticResource B.Info}" />
+                                </Border>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0" />
+
+                            <StackPanel Margin="14,11,14,12">
+                                <TextBlock Text="{ui:Tr AskLadder}" Style="{StaticResource T.Label}" />
+                                <Border Background="{StaticResource B.Bg}" BorderBrush="{StaticResource B.Border}"
+                                        BorderThickness="1" CornerRadius="{StaticResource R.Small}"
+                                        Margin="0,6,0,0" Padding="8,7">
+                                    <ctl:DepthLadder Height="230" Rungs="{Binding Ladder}"
+                                                     FairValue="{Binding DetailFairValue}" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- shulker and bundle contents, when there are any -->
+                            <StackPanel Visibility="{Binding DetailHasContents,
+                                                     Converter={StaticResource BoolToVis}}">
+                                <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0" />
+                                <StackPanel Margin="14,11,14,12">
+                                    <TextBlock Text="{ui:Tr Contents}" Style="{StaticResource T.Label}" />
+                                    <ItemsControl ItemsSource="{Binding DetailContents}" Margin="0,6,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                                               TextTrimming="CharacterEllipsis">
+                                                        <Run Text="{Binding Count, Mode=OneWay}" />
+                                                        <Run Text="x" />
+                                                        <Run Text="{Binding DisplayName, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="1" Style="{StaticResource T.MonoMuted}"
+                                                               FontSize="11"
+                                                               Text="{Binding LineValue, Mode=OneWay,
+                                                                      StringFormat={}{0:N0}}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0" />
+
+                            <!-- every reason the score was marked down, in plain words -->
+                            <StackPanel Margin="14,11,14,14">
+                                <TextBlock Text="{ui:Tr WhyThisScore}" Style="{StaticResource T.Label}"
+                                           Foreground="{StaticResource B.Accent}" />
+                                <ItemsControl ItemsSource="{Binding DetailNotes}" Margin="0,7,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="4" Height="4" Fill="{StaticResource B.TextDim}"
+                                                         VerticalAlignment="Top" Margin="0,6,7,0" />
+                                                <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource B.TextMuted}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
-
-                        <TextBlock Text="{ui:Tr PriceHistory}" Style="{StaticResource T.Label}" />
-                        <Border Background="{StaticResource B.Bg}" CornerRadius="{StaticResource R.Small}"
-                                Margin="0,5,0,14" Padding="6">
-                            <ctl:Sparkline Height="62" Points="{Binding SparkPoints}"
-                                           Reference="{Binding DetailFairValue}"
-                                           Stroke="{StaticResource B.Info}" />
-                        </Border>
-
-                        <TextBlock Text="{ui:Tr AskLadder}" Style="{StaticResource T.Label}" />
-                        <Border Background="{StaticResource B.Bg}" CornerRadius="{StaticResource R.Small}"
-                                Margin="0,5,0,14" Padding="8,6">
-                            <ctl:DepthLadder Height="230" Rungs="{Binding Ladder}"
-                                             FairValue="{Binding DetailFairValue}" />
-                        </Border>
-
-                        <TextBlock Text="{ui:Tr Contents}" Style="{StaticResource T.Label}"
-                                   Visibility="{Binding DetailHasContents, Converter={StaticResource BoolToVis}}" />
-                        <ItemsControl ItemsSource="{Binding DetailContents}" Margin="0,5,0,14"
-                                      Visibility="{Binding DetailHasContents, Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,1">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Style="{StaticResource T.MonoMuted}" FontSize="11"
-                                                   TextTrimming="CharacterEllipsis">
-                                            <Run Text="{Binding Count, Mode=OneWay}" />
-                                            <Run Text="x" />
-                                            <Run Text="{Binding DisplayName, Mode=OneWay}" />
-                                        </TextBlock>
-                                        <TextBlock Grid.Column="1" Style="{StaticResource T.MonoMuted}" FontSize="11"
-                                                   Text="{Binding LineValue, Mode=OneWay, StringFormat={}{0:N0}}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Text="{ui:Tr WhyThisScore}" Style="{StaticResource T.Label}" />
-                        <ItemsControl ItemsSource="{Binding DetailNotes}" Margin="0,5,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Ellipse Width="4" Height="4" Fill="{StaticResource B.TextDim}"
-                                                 VerticalAlignment="Top" Margin="0,6,7,0" />
-                                        <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
-                                                   FontSize="11" Foreground="{StaticResource B.TextMuted}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ScrollViewer>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

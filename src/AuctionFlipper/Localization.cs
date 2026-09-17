@@ -125,6 +125,16 @@ public sealed class Loc : INotifyPropertyChanged
         ["HeaderTape"] = "SALE TAPE",
         ["HeaderListings"] = "NEW LISTINGS",
         ["HeaderUptime"] = "UPTIME",
+        ["WarmupEta"] = "full book in {0}",
+        ["WarmupMeasuring"] = "measuring scan rate",
+        ["WarmupPaused"] = "scan paused",
+        ["WarmupDone"] = "book scanned - tape {0}",
+        ["WarmupTip"] = "The standing book is read page by page with whatever request budget the live feeds "
+                        + "leave over, so this counts down to the moment every listing on sale has been "
+                        + "seen once. Until then the cheapest ask for an item can still be one nobody has "
+                        + "looked at. After that the numbers keep sharpening for hours: sale prices are "
+                        + "weighted with a six-hour half-life, and an item needs five sales before its "
+                        + "value comes from what it traded at rather than from what it is listed at.",
         ["Pause"] = "Pause",
         ["Resume"] = "Resume",
         ["PauseTip"] = "Stop every collector, so the tool makes no API requests at all",
@@ -213,6 +223,20 @@ public sealed class Loc : INotifyPropertyChanged
                            + "minutes of history, so this feed is the only place longer-term prices come from - "
                            + "which is why leaving the tool running makes its valuations better.",
         ["TapeUnitTip"] = "Price per item",
+        ["TapeRowTip"] = "Click for this item's own sale history",
+
+        // per-item sale popup
+        ["SalesPopupTitle"] = "LAST SALES",
+        ["SalesPopupSummary"] = "Fair {0} each  -  {1}",
+        ["SalesPopupUnknown"] = "No fair value yet - too few sales",
+        ["SalesPopupEmpty"] = "No sales of this item captured yet. The tape only fills while the tool runs, "
+                              + "so a quiet item needs a while before it has a history.",
+        ["ColAgo"] = "AGO",
+        ["ColQty"] = "QTY",
+        ["ColTotal"] = "TOTAL",
+        ["ColEach"] = "EACH",
+        ["ColVsValue"] = "VS VALUE",
+        ["CloseTip"] = "Close",
 
         // item prices
         ["ItemsTitle"] = "Item prices",
@@ -413,6 +437,16 @@ public sealed class Loc : INotifyPropertyChanged
         ["HeaderTape"] = "VERKAUFSTICKER",
         ["HeaderListings"] = "NEUE ANGEBOTE",
         ["HeaderUptime"] = "LAUFZEIT",
+        ["WarmupEta"] = "Buch komplett in {0}",
+        ["WarmupMeasuring"] = "Scantempo wird gemessen",
+        ["WarmupPaused"] = "Scan pausiert",
+        ["WarmupDone"] = "Buch gescannt - Ticker {0}",
+        ["WarmupTip"] = "Das stehende Orderbuch wird Seite für Seite mit dem Budget gelesen, das die Live-Feeds "
+                        + "übrig lassen. Der Countdown läuft bis zu dem Moment, in dem jedes laufende Angebot "
+                        + "einmal gesehen wurde. Bis dahin kann das günstigste Angebot eines Items eines sein, "
+                        + "das noch niemand angesehen hat. Danach werden die Zahlen noch stundenlang besser: "
+                        + "Verkaufspreise werden mit sechs Stunden Halbwertszeit gewichtet, und ein Item braucht "
+                        + "fünf Verkäufe, bevor sein Wert aus gehandelten Preisen statt aus Angeboten stammt.",
         ["Pause"] = "Pause",
         ["Resume"] = "Fortsetzen",
         ["PauseTip"] = "Hält alle Sammler an, damit das Tool überhaupt keine API-Anfragen mehr stellt",
@@ -504,6 +538,20 @@ public sealed class Loc : INotifyPropertyChanged
                            + "längerfristige Preise - und deshalb werden die Bewertungen besser, je länger das "
                            + "Tool läuft.",
         ["TapeUnitTip"] = "Preis pro Item",
+        ["TapeRowTip"] = "Klicken für die Verkaufshistorie dieses Items",
+
+        // per-item sale popup
+        ["SalesPopupTitle"] = "LETZTE VERKÄUFE",
+        ["SalesPopupSummary"] = "Fair {0} pro Stück  -  {1}",
+        ["SalesPopupUnknown"] = "Noch kein fairer Wert - zu wenige Verkäufe",
+        ["SalesPopupEmpty"] = "Noch keine Verkäufe dieses Items erfasst. Der Ticker füllt sich nur, solange das "
+                              + "Tool läuft - ein ruhiges Item braucht also eine Weile, bis es eine Historie hat.",
+        ["ColAgo"] = "VOR",
+        ["ColQty"] = "ANZ.",
+        ["ColTotal"] = "GESAMT",
+        ["ColEach"] = "PRO STÜCK",
+        ["ColVsValue"] = "GG. WERT",
+        ["CloseTip"] = "Schließen",
 
         // item prices
         ["ItemsTitle"] = "Item-Preise",

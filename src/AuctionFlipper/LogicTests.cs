@@ -44,6 +44,8 @@ public static class LogicTests
         failures += Check("settings survive a write and a reload", ConfigRoundTrips);
         failures += Check("the saved book comes back without its dead listings", BookSnapshotRoundTrips);
         failures += Check("the icon sheet covers what the market trades", IconSheetCoversTheMarket);
+        failures += Check("an item's own sale history reads newest first", ItemSaleHistoryReadsNewestFirst);
+        failures += Check("the scan countdown measures the rate it sees", SweepEtaTracksTheMeasuredRate);
 
         Console.WriteLine(new string('-', 66));
         Console.WriteLine(failures == 0 ? "ALL LOGIC CHECKS PASSED" : $"{failures} LOGIC CHECK(S) FAILED");
@@ -473,6 +475,87 @@ public static class LogicTests
     /// that still renders. This checks the sheet is present, that a handful of ids every DonutSMP
     /// session sees resolve, and that no cell points off the end of the sheet.
     /// </summary>
+    /// <summary>
+    /// The per-item read behind the sale popup: newest sale first, stacks intact, and no bleed
+    /// from a neighbouring item. The series it reads is a ring buffer, so an off-by-one in the
+    /// wrap would quietly hand back the oldest sale as if it were the newest.
+    /// </summary>
+    private static (bool, string) ItemSaleHistoryReadsNewestFirst()
+    {
+        var tape = new SaleTape();
+        const long t0 = 1_700_000_000_000;
+
+        for (int i = 0; i < 5; i++)
+            tape.Add(new Sale(7, i + 1, 100 * (i + 1), 1, t0 + i * 1_000));
+
+        tape.Add(new Sale(9, 64, 64_000, 1, t0 + 500));
+
+        (long Time, double UnitPrice, int Count)[] history = tape.RecentSalesFor(7, 10);
+
+        if (history.Length != 5)
+            return (false, $"{history.Length} sales read back, expected 5");
+
+        for (int i = 1; i < history.Length; i++)
+        {
+            if (history[i].Time > history[i - 1].Time)
+                return (false, "the history came back oldest first");
+        }
+
+        if (history[0].Count != 5 || Math.Abs(history[0].UnitPrice - 100) > 0.001)
+            return (false, $"newest sale is x{history[0].Count} at {history[0].UnitPrice}");
+
+        if (tape.RecentSalesFor(9, 10).Length != 1)
+            return (false, "one item's history leaked into another's");
+
+        if (tape.RecentSalesFor(1234, 10).Length != 0)
+            return (false, "an item that never sold reported a history");
+
+        return (true, $"{history.Length} sales newest first, newest x{history[0].Count}");
+    }
+
+    /// <summary>
+    /// The countdown in the header. It divides by a measured rate, so the cases that matter are the
+    /// ones where there is no rate to measure: a scan that has just started, one that is not
+    /// moving, and the moment a finished cycle starts counting from zero again.
+    /// </summary>
+    private static (bool, string) SweepEtaTracksTheMeasuredRate()
+    {
+        var eta = new SweepEta();
+        const long t0 = 1_700_000_000_000;
+        const int total = 3_000;
+
+        // Too short a sample to divide by.
+        if (eta.Estimate(t0, 0, total) is not null) return (false, "estimated from a single sample");
+        if (eta.Estimate(t0 + 3_000, 20, total) is not null) return (false, "estimated from three seconds");
+
+        // Four pages a second for a minute: 2,760 pages left, so about eleven and a half minutes.
+        for (int second = 4; second <= 60; second++)
+            eta.Estimate(t0 + second * 1_000, second * 4, total);
+
+        TimeSpan? measured = eta.Estimate(t0 + 60_000, 240, total);
+        if (measured is not { } left) return (false, "no estimate after a minute of scanning");
+        if (Math.Abs(left.TotalSeconds - 690) > 30)
+            return (false, $"estimated {left.TotalSeconds:0}s, expected about 690s");
+
+        // A scan that stops moving reports no estimate rather than a stale one.
+        SweepEta stalled = new();
+        for (int second = 0; second <= 90; second++)
+            stalled.Estimate(t0 + second * 1_000, 500, total);
+        if (stalled.Estimate(t0 + 90_000, 500, total) is not null)
+            return (false, "a stalled scan still reported an estimate");
+
+        // A new cycle counts from zero; the previous cycle's samples must not survive it.
+        if (eta.Estimate(t0 + 61_000, 4, total) is not null)
+            return (false, "the estimate carried over into the next cycle");
+
+        // A finished sweep is zero, not a rate problem.
+        var done = new SweepEta();
+        if (done.Estimate(t0, total, total) != TimeSpan.Zero)
+            return (false, "a completed sweep did not read as finished");
+
+        return (true, $"{left.TotalSeconds:0}s left at 4 pages/s with {total - 240:N0} to go");
+    }
+
     private static (bool, string) IconSheetCoversTheMarket()
     {
         string[] staples =

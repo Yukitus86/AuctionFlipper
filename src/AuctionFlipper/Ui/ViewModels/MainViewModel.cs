@@ -41,6 +41,18 @@ public sealed class ItemRowVm
     public required bool NbtRisk { get; init; }
 }
 
+/// <summary>One line in the per-item sale popup: one completed sale of that item.</summary>
+public sealed class SaleDetailRowVm
+{
+    public required string AgoText { get; init; }
+    public required string CountText { get; init; }
+    public required string PriceText { get; init; }
+    public required string UnitText { get; init; }
+    public required string VersusValue { get; init; }
+    public required bool AboveValue { get; init; }
+    public required bool HasValue { get; init; }
+}
+
 /// <summary>
 /// Drives the whole window.
 ///
@@ -53,6 +65,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private const int MaxRows = 250;
 
+    /// <summary>Sales listed in the per-item popup. Deeper than a screen, bounded for the rebuild.</summary>
+    private const int MaxSalePopupRows = 120;
+
     private readonly Coordinator _coordinator;
     private readonly DispatcherTimer _timer;
     private readonly Dictionary<ulong, FlipRowVm> _rowCache = new();
@@ -64,6 +79,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly HashSet<string> _pinned;
 
     private int _tickCounter;
+
+    /// <summary>Measures how fast the book is being scanned, for the countdown in the header.</summary>
+    private readonly SweepEta _sweepEta = new();
+
+    /// <summary>
+    /// Latched once the book has been read end to end, and never cleared.
+    ///
+    /// The sweeper starts counting from zero on every new cycle, so without the latch the countdown
+    /// would reappear the moment the first sweep finished and tell the user their data had gone
+    /// cold again. The second pass is re-verification, not warm-up.
+    /// </summary>
+    private bool _bookScanned;
 
     public MainViewModel(Coordinator coordinator, AppConfig config)
     {
@@ -100,6 +127,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SaveSettingsCommand = new RelayCommand(_ => SaveSettings());
         TogglePauseCommand = new RelayCommand(_ => _ = TogglePauseAsync());
         TestAlertCommand = new RelayCommand(_ => _coordinator.Alerts.PlayPing());
+        ShowItemSalesCommand = new RelayCommand(ShowItemSales);
+        CloseItemSalesCommand = new RelayCommand(_ => CloseItemSales());
 
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -115,6 +144,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<TapeRowVm> RecentSales { get; } = [];
     public ObservableCollection<ItemRowVm> Items { get; } = [];
 
+    /// <summary>The sale popup's rows: the last sales of whichever item was clicked.</summary>
+    public ObservableCollection<SaleDetailRowVm> ItemSales { get; } = [];
+
     public RelayCommand CopySearchCommand { get; }
     public RelayCommand RefreshItemCommand { get; }
     public RelayCommand SetSortCommand { get; }
@@ -125,6 +157,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand SaveSettingsCommand { get; }
     public RelayCommand TogglePauseCommand { get; }
     public RelayCommand TestAlertCommand { get; }
+    public RelayCommand ShowItemSalesCommand { get; }
+    public RelayCommand CloseItemSalesCommand { get; }
 
     // ------------------------------------------------------------------ language
 
@@ -171,6 +205,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RefreshBoard();
         RefreshTape();
         RefreshItems();
+        if (_salesItemId is not null) RefreshItemSales();
         UpdateDetail();
         UpdateStatus();
     }
@@ -192,6 +227,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             Raise(nameof(BoardTitle));
             Raise(nameof(BoardSubtitle));
             Raise(nameof(EmptyBoardHint));
+
+            // The popup belongs to the tape and the item table; it carries over between those two
+            // but has no business hanging around on the board or in settings.
+            if (value is not (NavSection.Tape or NavSection.Items)) CloseItemSales();
+
             RefreshBoard();
         }
     }
@@ -433,6 +473,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _uptimeText = "";
     public string UptimeText { get => _uptimeText; private set => Set(ref _uptimeText, value); }
 
+    /// <summary>How long until the data is as good as it gets, under the uptime clock.</summary>
+    private string _warmupText = "";
+    public string WarmupText { get => _warmupText; private set => Set(ref _warmupText, value); }
+
+    private bool _warmupDone;
+    public bool WarmupDone { get => _warmupDone; private set => Set(ref _warmupDone, value); }
+
     private string _statusMessage;
     public string StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
 
@@ -467,6 +514,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         else if (IsTapeVisible) RefreshTape();
         else if (IsItemsVisible) RefreshItems();
 
+        if (_salesItemId is not null) RefreshItemSales();
+
         if (_selected is not null) UpdateDetail();
 
         // Settings reach disk while the app runs rather than on the way out. Closing is the one
@@ -475,6 +524,47 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         // preferences file. The write itself is a few hundred bytes and only happens when
         // something actually changed.
         if (_tickCounter % 20 == 0) Config.SaveIfDirty();
+    }
+
+    /// <summary>
+    /// The countdown under the uptime clock: how long until the book has been seen once.
+    ///
+    /// That is the point the board can be trusted to be complete. Until the sweep has been round
+    /// once, the cheapest listing for an item may simply be one nobody has looked at yet, and a
+    /// missing cheapest ask is the one error that makes a flip look better than it is.
+    ///
+    /// It is not the end of the story, which is why the line says what is still improving once the
+    /// scan is done: sale prices are weighted with a six-hour half-life, so the valuations keep
+    /// sharpening for hours after the book itself is complete.
+    /// </summary>
+    private void UpdateWarmup(MarketStatus status)
+    {
+        if (status.Sweeper.CoverageFraction >= 0.999) _bookScanned = true;
+
+        if (_bookScanned)
+        {
+            WarmupDone = true;
+            WarmupText = Loc.T("WarmupDone", Format.Duration(status.TapeSpan));
+            return;
+        }
+
+        WarmupDone = false;
+
+        if (Paused || !status.Sweeper.Running)
+        {
+            _sweepEta.Reset();
+            WarmupText = Loc.T("WarmupPaused");
+            return;
+        }
+
+        TimeSpan? left = _sweepEta.Estimate(
+            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            status.Sweeper.PagesVisited,
+            status.Sweeper.EstimatedTotalPages);
+
+        WarmupText = left is { } remaining
+            ? Loc.T("WarmupEta", Format.Clock(remaining))
+            : Loc.T("WarmupMeasuring");
     }
 
     private void UpdateStatus()
@@ -509,6 +599,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             : Loc.T("ScanPaused");
 
         UptimeText = Format.Duration(status.Uptime);
+        UpdateWarmup(status);
 
         StatusMessage = status.LastError is { Length: > 0 } error
             ? error
@@ -820,6 +911,124 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (rows.Count > 600) rows.RemoveRange(600, rows.Count - 600);
 
         Sync(Items, rows);
+    }
+
+    // ------------------------------------------------------------------ per-item sale popup
+
+    /// <summary>
+    /// Sale history for one item, opened by clicking a row on the tape or in the item table.
+    ///
+    /// The tape answers "what just sold"; this answers "what does this thing normally go for",
+    /// which is the question you actually have in front of a listing. It is read out of the tape
+    /// the tool has already accumulated, so opening it costs no API budget at all.
+    /// </summary>
+    private string? _salesItemId;
+
+    public bool HasItemSales => _salesItemId is not null;
+
+    private string _salesItemName = "";
+    public string SalesItemName { get => _salesItemName; private set => Set(ref _salesItemName, value); }
+
+    private string _salesItemIcon = "";
+    public string SalesItemIcon { get => _salesItemIcon; private set => Set(ref _salesItemIcon, value); }
+
+    private string _salesMonogram = "";
+    public string SalesMonogram { get => _salesMonogram; private set => Set(ref _salesMonogram, value); }
+
+    private double _salesHue;
+    public double SalesHue { get => _salesHue; private set => Set(ref _salesHue, value); }
+
+    private string _salesSummary = "";
+    public string SalesSummary { get => _salesSummary; private set => Set(ref _salesSummary, value); }
+
+    private string _salesEmptyText = "";
+    public string SalesEmptyText { get => _salesEmptyText; private set => Set(ref _salesEmptyText, value); }
+
+    private void ShowItemSales(object? parameter)
+    {
+        string? itemId = parameter switch
+        {
+            TapeRowVm tape => tape.ItemId,
+            ItemRowVm item => item.ItemId,
+            FlipRowVm flip => flip.Flip.ItemId,
+            string id => id,
+            _ => null,
+        };
+
+        if (itemId is not { Length: > 0 }) return;
+
+        // A second click on the row that is already open closes it again, so the same click both
+        // opens and dismisses and the panel never has to be hunted for a close button.
+        if (string.Equals(_salesItemId, itemId, StringComparison.Ordinal))
+        {
+            CloseItemSales();
+            return;
+        }
+
+        _salesItemId = itemId;
+
+        ItemInfo info = ItemCatalog.Get(itemId);
+        SalesItemName = info.DisplayName;
+        SalesItemIcon = itemId;
+        SalesMonogram = Format.Monogram(info.DisplayName);
+        SalesHue = info.Hue;
+
+        Raise(nameof(HasItemSales));
+        RefreshItemSales();
+    }
+
+    private void CloseItemSales()
+    {
+        if (_salesItemId is null) return;
+
+        _salesItemId = null;
+        ItemSales.Clear();
+        Raise(nameof(HasItemSales));
+    }
+
+    private void RefreshItemSales()
+    {
+        if (_salesItemId is null) return;
+
+        MarketState market = _coordinator.Market;
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        if (!market.Items.TryGetIndex(_salesItemId, out int itemIndex))
+        {
+            ItemSales.Clear();
+            SalesSummary = Loc.T("SalesPopupUnknown");
+            SalesEmptyText = Loc.T("SalesPopupEmpty");
+            return;
+        }
+
+        ItemValue value = market.ValueOf(itemIndex);
+        bool known = value.IsKnown && value.Unit > 0;
+        ItemSaleStats stats = market.Tape.GetStats(itemIndex, now);
+
+        SalesSummary = known
+            ? Loc.T("SalesPopupSummary", Format.Coins(value.Unit), Format.Rate(stats.SalesPerHour))
+            : Loc.T("SalesPopupUnknown");
+
+        (long Time, double UnitPrice, int Count)[] sales = market.Tape.RecentSalesFor(itemIndex, MaxSalePopupRows);
+
+        var rows = new List<SaleDetailRowVm>(sales.Length);
+        foreach ((long time, double unitPrice, int count) in sales)
+        {
+            double delta = known ? unitPrice / value.Unit - 1 : 0;
+            rows.Add(new SaleDetailRowVm
+            {
+                AgoText = Format.Age(Math.Max(0, now - time)),
+                CountText = count > 1 ? $"x{count}" : "x1",
+                PriceText = Format.Coins(unitPrice * count),
+                UnitText = Format.Coins(unitPrice),
+                VersusValue = known ? Format.Signed(delta * 100) + "%" : "-",
+                AboveValue = delta >= 0,
+                HasValue = known,
+            });
+        }
+
+        SalesEmptyText = rows.Count == 0 ? Loc.T("SalesPopupEmpty") : "";
+        Sync(ItemSales, rows);
     }
 
     // ------------------------------------------------------------------ commands

@@ -320,6 +320,31 @@ public sealed class SaleTape
         }
     }
 
+    /// <summary>
+    /// The newest sales of one item, newest first.
+    ///
+    /// Read out of the per-item series rather than by filtering the global ring, because the ring
+    /// only holds the last few thousand sales of the whole market - on a busy auction house that is
+    /// a couple of minutes, and a quiet item would show nothing at all.
+    /// </summary>
+    public (long Time, double UnitPrice, int Count)[] RecentSalesFor(int itemIndex, int max)
+    {
+        lock (_gate)
+        {
+            if (max <= 0 || !_byItem.TryGetValue(itemIndex, out ItemSales? s) || s.Length == 0)
+                return [];
+
+            int take = Math.Min(max, s.Length);
+            var result = new (long, double, int)[take];
+            for (int i = 0; i < take; i++)
+            {
+                int idx = (s.Head + s.Length - 1 - i) % s.Times.Length;
+                result[i] = (s.Times[idx], s.UnitPrices[idx], s.Counts[idx]);
+            }
+            return result;
+        }
+    }
+
     /// <summary>Sale points for one item inside the window, oldest first. Feeds the sparkline.</summary>
     public (long Time, double UnitPrice)[] History(int itemIndex, long nowUnixMs)
     {

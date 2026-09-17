@@ -16,8 +16,8 @@ It is read-only. It finds and ranks opportunities; you buy and list in game.
 |---|---|
 | ![the hover card](docs/hover-card.png) | **Hover card** — exact coins, where the price came from, how long the stack takes to clear, and every reason the confidence was marked down. |
 | ![pinned items](docs/pinned.png) | **Pinned** — the items you are working, with the board filters relaxed and alerts that ignore the grade threshold. |
-| ![the sale tape](docs/sale-tape.png) | **Sale tape** — every sale the tool has captured, each one measured against its own fair value. |
-| ![item prices](docs/item-prices.png) | **Item prices** — what each item is believed to be worth, and whether that came from observed sales or only from asks. |
+| ![the sale tape](docs/sale-tape.png) | **Sale tape** — every sale the tool has captured, each one measured against its own fair value. Click a row for that item's own history. |
+| ![item prices](docs/item-prices.png) | **Item prices** — what each item is believed to be worth, and whether that came from observed sales or only from asks. Click a row for the sales behind the figure. |
 | ![the board in German](docs/board-german.png) | **German** — the whole interface, switched live from Settings. Item names stay in English because that is what `/ah` wants. |
 
 ---
@@ -40,8 +40,9 @@ are written to disk within seconds of changing, not at shutdown — a crash or a
 loses nothing. The key is stored in `%APPDATA%\AuctionFlipper\config.json` and never leaves your
 machine except in requests to `api.donutsmp.net`.
 
-Give it a few minutes. The tool is far better at its job after half an hour than after thirty
-seconds, for a reason worth understanding — see *Why it improves as it runs*.
+Give it a quarter of an hour. Reading the whole auction house takes about that long — ~2,500 pages
+at whatever request budget the live feeds leave over — and the header counts down to the moment it
+is done. After that the valuations keep sharpening for hours; see *Why it improves as it runs*.
 
 Building from source requires the .NET 10 SDK on Windows. There are no NuGet packages; everything
 is written from scratch against the in-box framework, so there is no restore step that can fail.
@@ -49,10 +50,12 @@ is written from scratch against the in-box framework, so there is no restore ste
 To rebuild the single-file release:
 
 ```
-dotnet publish src/AuctionFlipper -c Release -r win-x64 --self-contained true ^
-  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true ^
-  -p:EnableCompressionInSingleFile=true -p:DebugType=none -o release
+dotnet publish src/AuctionFlipper -c Release -o release
 ```
+
+The publish settings live in the project file, so that is the whole command. What comes out is one
+executable and nothing else: WPF's native libraries are bundled inside it rather than left loose
+beside it, and the debug symbols are embedded in the binary rather than shipped as a `.pdb`.
 
 ---
 
@@ -295,6 +298,27 @@ filed under "Block of Gold".
 ---
 
 ## Changelog
+
+### 1.5
+
+- **Click any row for that item's own sale history.** On the sale tape and in the item price table,
+  one click opens a panel beside the list holding the last sales of that item: how long ago, stack
+  size, total, price each, and how each print compared with the tool's own valuation. The tape says
+  what just sold; this says what the thing normally goes for, which is the question you actually
+  have in front of a listing. It reads the history the tool has already accumulated, so it costs no
+  request budget. Clicking the same row again closes it.
+- **A countdown to complete data**, under the uptime clock. The board is only as complete as the
+  book scan behind it, and that scan takes around a quarter of an hour: ~2,500 pages at whatever
+  budget the live feeds leave over, measured at ~200 pages a minute on a normal market. The header
+  now counts down to the moment every listing on sale has been seen once, then says so and shows
+  how deep the sale tape runs. The estimate is measured from the scan's own rate, not assumed, so a
+  busy market that slows the scan down is reflected rather than hidden.
+- **The release is one file again.** A single-file publish had been leaving WPF's five native
+  libraries and a `.pdb` loose beside the executable, so the "single file" was six of them and
+  moving the exe on its own broke it. They are bundled inside the binary now.
+- **The header figures moved to the left**, next to the name and behind a divider. Request budget,
+  book, tape, new listings and uptime are read constantly, and out at the right edge of a wide
+  monitor they sat as far from the eye as the layout allowed. Pause stays on the right.
 
 ### 1.4
 

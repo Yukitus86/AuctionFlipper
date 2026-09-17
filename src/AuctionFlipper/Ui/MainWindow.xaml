@@ -43,11 +43,20 @@
                     <TextBlock Text="AUCTION FLIPPER" FontWeight="Bold" FontSize="14" />
                     <TextBlock Text="DonutSMP" Foreground="{StaticResource B.TextDim}" FontSize="11"
                                Margin="10,3,0,0" VerticalAlignment="Center" />
+
+                    <!-- Rule between the name and the numbers, so the two read as separate things
+                         rather than as one long line of header. -->
+                    <Border Width="1" Height="30" Background="{StaticResource B.Border}"
+                            Margin="20,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <!-- Live telemetry. The tool's own request cost is on screen, not hidden. -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
+                <!-- Live telemetry. The tool's own request cost is on screen, not hidden.
+
+                     Left-aligned, next to the name: these are the figures that say whether the tool
+                     is keeping up, and they are read constantly. Pushed out to the right edge of a
+                     wide monitor they sat as far from the eye as the layout allowed. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left"
+                            VerticalAlignment="Center" Margin="20,0,0,0">
 
                     <StackPanel Margin="0,0,26,0" MinWidth="150">
                         <TextBlock Text="{ui:Tr HeaderBudget}" Style="{StaticResource T.Label}" />
@@ -82,10 +91,26 @@
                                    Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <StackPanel MinWidth="60">
+                    <!-- Uptime, and under it how long the tool still needs before the board is
+                         complete. The scan is the slow part of starting up, and without this the
+                         only way to judge whether a thin-looking board meant a quiet market or an
+                         unfinished scan was to watch the progress figure in the status bar. -->
+                    <StackPanel MinWidth="152" ToolTip="{ui:Tr WarmupTip}">
                         <TextBlock Text="{ui:Tr HeaderUptime}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding UptimeText}" Style="{StaticResource T.Mono}" FontSize="12"
                                    Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding WarmupText}" FontSize="10" Margin="0,3,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
+                                    <Setter Property="Foreground" Value="{StaticResource B.Accent}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WarmupDone}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource B.Profit}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </StackPanel>
 

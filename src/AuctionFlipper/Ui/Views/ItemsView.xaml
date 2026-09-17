@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:AuctionFlipper.Ui"
              xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             xmlns:views="clr-namespace:AuctionFlipper.Ui.Views"
              Background="{StaticResource B.Bg}">
 
     <UserControl.Resources>
@@ -15,6 +16,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
 
         <StackPanel Margin="0,0,0,10">
             <TextBlock Text="{ui:Tr ItemsTitle}" FontSize="17" FontWeight="SemiBold" />
@@ -96,46 +101,60 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Height="32" Margin="6,1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="3*" MinWidth="170" MaxWidth="460" />
-                                    <ColumnDefinition Width="110" />
-                                    <ColumnDefinition Width="110" />
-                                    <ColumnDefinition Width="140" />
-                                    <ColumnDefinition Width="90" />
-                                    <ColumnDefinition Width="110" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+                            <!--
+                                The whole row is the button: one click opens what this item has
+                                actually been selling for, which is the check on the value the
+                                row quotes.
+                            -->
+                            <Button Style="{StaticResource Row.Click}" ToolTip="{ui:Tr TapeRowTip}"
+                                    Command="{Binding DataContext.ShowItemSalesCommand,
+                                              RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding ItemId}">
+                                <Grid Height="32" Margin="6,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="3*" MinWidth="170" MaxWidth="460" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="90" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
 
-                                <ctl:ItemChip Width="24" Height="24" Corner="4" Hue="{Binding Hue}"
-                                              ItemId="{Binding ItemId}" Monogram="{Binding Monogram}"
-                                              VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <ctl:ItemChip Width="24" Height="24" Corner="4" Hue="{Binding Hue}"
+                                                  ItemId="{Binding ItemId}" Monogram="{Binding Monogram}"
+                                                  VerticalAlignment="Center" Margin="0,0,10,0" />
 
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
-                                    <Border Background="#22FF5C5C" CornerRadius="2" Padding="4,0" Margin="8,0,0,0"
-                                            Visibility="{Binding NbtRisk, Converter={StaticResource BoolToVis}}"
-                                            ToolTip="{ui:Tr NbtTip}">
-                                        <TextBlock Text="NBT?" FontSize="9" Foreground="{StaticResource B.Loss}" />
-                                    </Border>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
+                                        <Border Background="#22FF5C5C" CornerRadius="2" Padding="4,0" Margin="8,0,0,0"
+                                                Visibility="{Binding NbtRisk, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="{ui:Tr NbtTip}">
+                                            <TextBlock Text="NBT?" FontSize="9" Foreground="{StaticResource B.Loss}" />
+                                        </Border>
+                                    </StackPanel>
 
-                                <TextBlock Grid.Column="2" Text="{Binding ValueText}"
-                                           Style="{StaticResource T.Mono}" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="3" Text="{Binding LowestText}"
-                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="4" Text="{Binding SalesText}"
-                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="5" Text="{Binding AsksText}"
-                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="6" Text="{Binding SourceText}"
-                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
-                            </Grid>
+                                    <TextBlock Grid.Column="2" Text="{Binding ValueText}"
+                                               Style="{StaticResource T.Mono}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding LowestText}"
+                                               Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="4" Text="{Binding SalesText}"
+                                               Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="5" Text="{Binding AsksText}"
+                                               Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="6" Text="{Binding SourceText}"
+                                               Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
         </Border>
+
+        <!-- The clicked item's own sale history, beside the table it was clicked in. -->
+        <views:ItemSalesPanel Grid.Row="2" Grid.Column="1" Margin="12,0,0,0"
+                              Visibility="{Binding HasItemSales, Converter={StaticResource BoolToVis}}" />
     </Grid>
 </UserControl>

@@ -52,6 +52,16 @@ public static class Format
         return $"{span.TotalDays:0.#}d";
     }
 
+    /// <summary>A countdown read as a clock: 14:08, and 1:14:08 once past an hour.</summary>
+    public static string Clock(TimeSpan span)
+    {
+        if (span < TimeSpan.Zero) span = TimeSpan.Zero;
+
+        return span.TotalHours >= 1
+            ? $"{(int)span.TotalHours}:{span.Minutes:00}:{span.Seconds:00}"
+            : $"{span.Minutes}:{span.Seconds:00}";
+    }
+
     /// <summary>Time for the market to absorb a stack, phrased as a wait rather than a number.</summary>
     public static string Absorb(double hours)
     {

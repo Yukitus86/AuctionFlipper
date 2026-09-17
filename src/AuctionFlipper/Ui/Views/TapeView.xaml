@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:AuctionFlipper.Ui"
              xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             xmlns:views="clr-namespace:AuctionFlipper.Ui.Views"
              Background="{StaticResource B.Bg}">
 
     <UserControl.Resources>
@@ -14,6 +15,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
 
         <StackPanel Margin="0,0,0,10">
             <TextBlock Text="{ui:Tr TapeTitle}" FontSize="17" FontWeight="SemiBold" />
@@ -57,67 +62,81 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid Height="34" Margin="4,1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="3*" MinWidth="160" MaxWidth="460" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="90" />
-                                <ColumnDefinition Width="60" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                        <!--
+                            The whole row is the button. The tape answers "what just sold"; one
+                            click answers "what does this normally go for", which is the question
+                            you actually have in front of a listing.
+                        -->
+                        <Button Style="{StaticResource Row.Click}" ToolTip="{ui:Tr TapeRowTip}"
+                                Command="{Binding DataContext.ShowItemSalesCommand,
+                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding ItemId}">
+                            <Grid Height="34" Margin="4,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="3*" MinWidth="160" MaxWidth="460" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <ctl:ItemChip Width="24" Height="24" Corner="4" Hue="{Binding Hue}"
-                                          ItemId="{Binding ItemId}" Monogram="{Binding Monogram}"
-                                          VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <ctl:ItemChip Width="24" Height="24" Corner="4" Hue="{Binding Hue}"
+                                              ItemId="{Binding ItemId}" Monogram="{Binding Monogram}"
+                                              VerticalAlignment="Center" Margin="0,0,10,0" />
 
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding CountText}" Style="{StaticResource T.MonoMuted}"
-                                           Margin="7,1,0,0" />
-                            </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding CountText}" Style="{StaticResource T.MonoMuted}"
+                                               Margin="7,1,0,0" />
+                                </StackPanel>
 
-                            <TextBlock Grid.Column="2" Text="{Binding PriceText}" Style="{StaticResource T.Mono}"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Text="{Binding UnitText}"
-                                       Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center"
-                                       ToolTip="{ui:Tr TapeUnitTip}" />
+                                <TextBlock Grid.Column="2" Text="{Binding PriceText}" Style="{StaticResource T.Mono}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{Binding UnitText}"
+                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center"
+                                           ToolTip="{ui:Tr TapeUnitTip}" />
 
-                            <!-- How the print compares with the tool's own fair value: this is the
-                                 sanity check on every number the board shows. -->
-                            <TextBlock Grid.Column="4" Text="{Binding VersusValue}"
-                                       FontSize="11.5" VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
-                                        <Setter Property="Foreground" Value="{StaticResource B.TextDim}" />
-                                        <Style.Triggers>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding HasValue}" Value="True" />
-                                                    <Condition Binding="{Binding AboveValue}" Value="True" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="Foreground" Value="{StaticResource B.Profit}" />
-                                            </MultiDataTrigger>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding HasValue}" Value="True" />
-                                                    <Condition Binding="{Binding AboveValue}" Value="False" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="Foreground" Value="{StaticResource B.Loss}" />
-                                            </MultiDataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                                <!-- How the print compares with the tool's own fair value: this is the
+                                     sanity check on every number the board shows. -->
+                                <TextBlock Grid.Column="4" Text="{Binding VersusValue}"
+                                           FontSize="11.5" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
+                                            <Setter Property="Foreground" Value="{StaticResource B.TextDim}" />
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding HasValue}" Value="True" />
+                                                        <Condition Binding="{Binding AboveValue}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="{StaticResource B.Profit}" />
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding HasValue}" Value="True" />
+                                                        <Condition Binding="{Binding AboveValue}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="{StaticResource B.Loss}" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
-                            <TextBlock Grid.Column="5" Text="{Binding AgoText}"
-                                       Style="{StaticResource T.MonoMuted}" FontSize="10.5"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
-                        </Grid>
+                                <TextBlock Grid.Column="5" Text="{Binding AgoText}"
+                                           Style="{StaticResource T.MonoMuted}" FontSize="10.5"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Border>
+
+        <!-- The clicked item's own sale history, beside the feed it was clicked in. -->
+        <views:ItemSalesPanel Grid.Row="1" Grid.Column="1" Margin="12,0,0,0"
+                              Visibility="{Binding HasItemSales, Converter={StaticResource BoolToVis}}" />
     </Grid>
 </UserControl>

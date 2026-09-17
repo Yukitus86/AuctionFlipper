@@ -408,6 +408,42 @@
         </Setter>
     </Style>
 
+    <!-- A whole table row turned into a button. Chromeless until hovered, because a tape printing
+         several sales a second must not look like a wall of buttons - the hover is the only thing
+         that says the row can be clicked at all. -->
+    <Style x:Key="Row.Click" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent"
+                            BorderThickness="1" CornerRadius="{StaticResource R.Medium}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{StaticResource B.SurfaceAlt}" />
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{StaticResource B.BorderStrong}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{StaticResource B.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- A star the row can be pinned with. Chromeless until hovered, so 250 of them down a list
          read as one faint column rather than 250 buttons. -->
     <Style x:Key="Btn.Pin" TargetType="Button">
