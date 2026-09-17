@@ -96,10 +96,19 @@ public sealed class Coordinator : IDisposable
             // before any sale is replayed or history would attach to the wrong items.
             _persistence.LoadItemTable(Market.Items);
             int restored = _persistence.LoadRecentSales(Market.Tape, MarketConstants.ValuationWindow);
+
+            // The standing book: what was for sale last time the tool ran. Without it the board is
+            // empty until the scan has walked enough pages to price something, which is a quarter
+            // of an hour of watching nothing on a tool whose whole job is to be watched.
+            int listings = _config.WarmStart
+                ? _persistence.LoadBook(Market, MarketConstants.BookSnapshotMaxAge)
+                : 0;
+
             _historyRestored = true;
 
-            if (restored > 0)
-                LogMessage?.Invoke(Loc.T("StatusRestored", restored.ToString("N0")));
+            if (restored > 0 || listings > 0)
+                LogMessage?.Invoke(Loc.T("StatusRestored",
+                    restored.ToString("N0"), listings.ToString("N0")));
         }
 
         _tasks.Add(Task.Run(() => _sniper.RunAsync(ct), ct));
@@ -126,6 +135,7 @@ public sealed class Coordinator : IDisposable
         _cts = null;
 
         _persistence.SaveItemTable(Market.Items);
+        if (_config.WarmStart) _persistence.SaveBook(Market);
         _persistence.Flush();
     }
 
@@ -147,7 +157,7 @@ public sealed class Coordinator : IDisposable
     /// </summary>
     private async Task MaintenanceAsync(CancellationToken ct)
     {
-        long lastEvict = 0, lastSave = 0, lastPrune = 0;
+        long lastEvict = 0, lastSave = 0, lastPrune = 0, lastBook = Environment.TickCount64;
 
         while (!ct.IsCancellationRequested)
         {
@@ -172,6 +182,14 @@ public sealed class Coordinator : IDisposable
                     _persistence.SaveItemTable(Market.Items);
                     _persistence.Flush();
                     lastSave = now;
+                }
+
+                // The book is written on a slow cycle as well as at shutdown, because the case the
+                // warm start is really for is the one where there was no shutdown to speak of.
+                if (_config.WarmStart && now - lastBook > (long)MarketConstants.BookSnapshotInterval.TotalMilliseconds)
+                {
+                    _persistence.SaveBook(Market);
+                    lastBook = now;
                 }
 
                 if (now - lastPrune > 6 * 3_600_000)

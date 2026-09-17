@@ -50,6 +50,9 @@ public sealed class OrderBook
             if (_byFingerprint.TryGetValue(listing.Fingerprint, out Listing? existing))
             {
                 existing.LastSeenUnixMs = nowUnixMs;
+
+                // Seeing it live is the confirmation a restored listing was waiting for.
+                existing.Restored = false;
                 return false;
             }
 
@@ -267,6 +270,18 @@ public sealed class OrderBook
     public int[] TrackedItemIndexes()
     {
         lock (_gate) return _byItem.Keys.ToArray();
+    }
+
+    /// <summary>
+    /// Every listing currently held, for writing the book to disk.
+    ///
+    /// Copied out under the lock rather than handed back as a live view: the collectors are adding
+    /// and removing listings continuously, and the snapshot is written to a file over several
+    /// hundred milliseconds.
+    /// </summary>
+    public Listing[] AllListings()
+    {
+        lock (_gate) return _byFingerprint.Values.ToArray();
     }
 
     private static void EnsureSorted(ItemAsks asks)

@@ -29,4 +29,17 @@ public static class MarketConstants
 
     /// <summary>Sales needed before a valuation is trusted over the ask ladder.</summary>
     public const int MinSalesForConfidentValue = 5;
+
+    /// <summary>
+    /// How old a saved book may be and still be worth reading back.
+    ///
+    /// Six hours is a quarter of a listing's life: most of what was on sale then is still on sale,
+    /// and what is not gets cleared within the hour by the ordinary unseen sweep. Beyond that the
+    /// hit rate falls away and a restored board would mostly be advertising listings that have
+    /// already been bought, which is worse than an empty one.
+    /// </summary>
+    public static readonly TimeSpan BookSnapshotMaxAge = TimeSpan.FromHours(6);
+
+    /// <summary>How often the standing book is written out while the tool runs.</summary>
+    public static readonly TimeSpan BookSnapshotInterval = TimeSpan.FromMinutes(5);
 }

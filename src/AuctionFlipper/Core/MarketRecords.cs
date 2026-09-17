@@ -42,6 +42,16 @@ public sealed class Listing
     /// <summary>True the first time the sniper saw it, so the board can badge it as fresh.</summary>
     public bool FromSniper { get; init; }
 
+    /// <summary>
+    /// Read back from the previous session's book rather than observed this run.
+    ///
+    /// A restored listing is a claim about the past: it was for sale when the file was written and
+    /// nothing since then says otherwise. It is worth showing, because the alternative is a blank
+    /// board for the first quarter of an hour, but it is not worth showing silently - the board
+    /// badges it until a collector sees the listing again, at which point this clears.
+    /// </summary>
+    public bool Restored { get; set; }
+
     public double UnitPrice => Count > 0 ? Price / Count : Price;
 
     public long AgeMs(long nowUnixMs) => Math.Max(0, nowUnixMs - ListedAtUnixMs);

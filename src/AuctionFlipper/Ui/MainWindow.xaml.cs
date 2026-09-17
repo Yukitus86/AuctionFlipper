@@ -71,6 +71,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _config = AppConfig.Load();
+        RestorePlacement();
         _coordinator = new Coordinator(_config);
         _viewModel = new MainViewModel(_coordinator, _config);
         DataContext = _viewModel;
@@ -168,11 +169,69 @@ public partial class MainWindow : Window
         return toast;
     }
 
+    /// <summary>
+    /// Puts the window back where it was left.
+    ///
+    /// Size and position are restored before the window is shown so it never appears at the default
+    /// size and jumps. The saved rectangle is checked against the virtual desktop first: a window
+    /// restored onto a monitor that has since been unplugged opens somewhere the mouse cannot
+    /// reach, and the only way out of that is editing the config by hand.
+    /// </summary>
+    private void RestorePlacement()
+    {
+        if (_config.WindowWidth >= MinWidth) Width = _config.WindowWidth;
+        if (_config.WindowHeight >= MinHeight) Height = _config.WindowHeight;
+
+        if (!double.IsNaN(_config.WindowLeft) && !double.IsNaN(_config.WindowTop))
+        {
+            double left = _config.WindowLeft;
+            double top = _config.WindowTop;
+
+            double screenLeft = SystemParameters.VirtualScreenLeft;
+            double screenTop = SystemParameters.VirtualScreenTop;
+            double screenRight = screenLeft + SystemParameters.VirtualScreenWidth;
+            double screenBottom = screenTop + SystemParameters.VirtualScreenHeight;
+
+            // A strip of title bar wide enough to grab has to land on a real monitor.
+            bool reachable = left + Width > screenLeft + 120 && left < screenRight - 120
+                             && top >= screenTop - 8 && top < screenBottom - 60;
+
+            if (reachable)
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Left = left;
+                Top = top;
+            }
+        }
+
+        if (_config.WindowMaximized) WindowState = WindowState.Maximized;
+    }
+
+    private void SavePlacement()
+    {
+        _config.WindowMaximized = WindowState == WindowState.Maximized;
+
+        // RestoreBounds is the size the window would return to, which is the one worth keeping -
+        // saving a maximised window's own bounds would restore it un-maximised at screen size.
+        Rect bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, Width, Height)
+            : RestoreBounds;
+
+        if (bounds is { Width: > 0, Height: > 0 })
+        {
+            _config.WindowLeft = bounds.Left;
+            _config.WindowTop = bounds.Top;
+            _config.WindowWidth = bounds.Width;
+            _config.WindowHeight = bounds.Height;
+        }
+    }
+
     private void OnClosing(object? sender, CancelEventArgs e)
     {
         _viewModel.Dispose();
         _toast?.Close();
         _dashboard?.Dispose();
+        SavePlacement();
         _config.Save();
         _coordinator.Dispose();
     }

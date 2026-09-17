@@ -29,6 +29,8 @@ public enum FlipFlags
     TrendingDown = 1 << 10,
     /// <summary>Costs more than the capital configured in Settings.</summary>
     OverBudget = 1 << 11,
+    /// <summary>Read back from the last session's book and not yet seen again this run.</summary>
+    Unverified = 1 << 12,
 }
 
 public enum FlipGrade
@@ -284,6 +286,17 @@ public sealed class FlipScorer
             notes.Add(Loc.T("NoteOverBudget"));
         }
 
+        // --- is this listing still real ---
+        if (listing.Restored)
+        {
+            // A restored listing has not been observed this session, so it is evidence about the
+            // market rather than about this listing. The board is still better for having it, but
+            // it must not outrank something a collector actually just saw.
+            confidence *= 0.75;
+            flags |= FlipFlags.Unverified;
+            notes.Add(Loc.T("NoteUnverified"));
+        }
+
         double confidencePct = Math.Clamp(confidence * 100, 0, 100);
 
         return new FlipOpportunity
@@ -338,7 +351,8 @@ public sealed class FlipScorer
 
         var notes = new List<string>
         {
-            $"Contents value {valuation.GrossValue:N0}; recoverable after undercuts {valuation.RecoverableValue:N0}.",
+            Loc.T("NoteContentsValue",
+                valuation.GrossValue.ToString("N0"), valuation.RecoverableValue.ToString("N0")),
         };
         FlipFlags flags = FlipFlags.Container;
         double confidence = 1.0;
@@ -398,6 +412,13 @@ public sealed class FlipScorer
         {
             flags |= FlipFlags.OverBudget;
             notes.Add(Loc.T("NoteOverBudget"));
+        }
+
+        if (listing.Restored)
+        {
+            confidence *= 0.75;
+            flags |= FlipFlags.Unverified;
+            notes.Add(Loc.T("NoteUnverified"));
         }
 
         double confidencePct = Math.Clamp(confidence * 100, 0, 100);

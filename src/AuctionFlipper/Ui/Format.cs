@@ -95,19 +95,38 @@ public static class Format
         _ => Loc.T("SourceUnknown"),
     };
 
-    /// <summary>Short badge text for each risk flag, for the row badges.</summary>
+    /// <summary>
+    /// Short badge text for each risk flag, for the row badges.
+    ///
+    /// These go through the string table like every other label. They used to be literals, which
+    /// left a German board reading "THIN SWINGY FALLING" - and a badge nobody can read is worse
+    /// than no badge, because it still takes the space and still looks like a warning.
+    /// </summary>
     public static IEnumerable<string> Badges(FlipFlags flags)
     {
-        if (flags.HasFlag(FlipFlags.NbtRisk)) yield return "NBT?";
-        if (flags.HasFlag(FlipFlags.Container)) yield return "BOX";
-        if (flags.HasFlag(FlipFlags.TooGoodToBeTrue)) yield return "TRAP?";
-        if (flags.HasFlag(FlipFlags.ThinBook)) yield return "THIN";
-        if (flags.HasFlag(FlipFlags.Stale)) yield return "STALE";
-        if (flags.HasFlag(FlipFlags.Volatile)) yield return "SWINGY";
-        if (flags.HasFlag(FlipFlags.SellerWall)) yield return "1 SELLER";
-        if (flags.HasFlag(FlipFlags.NoSaleHistory)) yield return "NO SALES";
-        if (flags.HasFlag(FlipFlags.TrendingUp)) yield return "RISING";
-        if (flags.HasFlag(FlipFlags.TrendingDown)) yield return "FALLING";
-        if (flags.HasFlag(FlipFlags.OverBudget)) yield return "OVER BUDGET";
+        if (flags.HasFlag(FlipFlags.NbtRisk)) yield return Loc.T("BadgeNbt");
+        if (flags.HasFlag(FlipFlags.Container)) yield return Loc.T("BadgeBox");
+        if (flags.HasFlag(FlipFlags.TooGoodToBeTrue)) yield return Loc.T("BadgeTrap");
+        if (flags.HasFlag(FlipFlags.ThinBook)) yield return Loc.T("BadgeThin");
+        if (flags.HasFlag(FlipFlags.Stale)) yield return Loc.T("BadgeStale");
+        if (flags.HasFlag(FlipFlags.Volatile)) yield return Loc.T("BadgeSwingy");
+        if (flags.HasFlag(FlipFlags.SellerWall)) yield return Loc.T("BadgeOneSeller");
+        if (flags.HasFlag(FlipFlags.NoSaleHistory)) yield return Loc.T("BadgeNoSales");
+        if (flags.HasFlag(FlipFlags.TrendingUp)) yield return Loc.T("BadgeRising");
+        if (flags.HasFlag(FlipFlags.TrendingDown)) yield return Loc.T("BadgeFalling");
+        if (flags.HasFlag(FlipFlags.Unverified)) yield return Loc.T("BadgeUnverified");
+        if (flags.HasFlag(FlipFlags.OverBudget)) yield return Loc.T("BadgeOverBudget");
     }
+
+    /// <summary>Item category, for the explorer. The ids stay English; the category is prose.</summary>
+    public static string CategoryLabel(ItemCategory category) => category switch
+    {
+        ItemCategory.Commodity => Loc.T("CategoryCommodity"),
+        ItemCategory.Block => Loc.T("CategoryBlock"),
+        ItemCategory.Container => Loc.T("CategoryContainer"),
+        ItemCategory.Gear => Loc.T("CategoryGear"),
+        ItemCategory.Consumable => Loc.T("CategoryConsumable"),
+        ItemCategory.Decoration => Loc.T("CategoryDecoration"),
+        _ => Loc.T("CategoryOther"),
+    };
 }

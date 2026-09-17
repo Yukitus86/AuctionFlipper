@@ -35,7 +35,9 @@ dotnet run --project src/AuctionFlipper
 ```
 
 On first launch it opens on **Settings**. Generate a key in game with `/api`, paste it in, and press
-**Save settings**. The key is stored in `%APPDATA%\AuctionFlipper\config.json` and never leaves your
+**Save settings**. Settings, pins, the window's size and position and the screen you were last on
+are written to disk within seconds of changing, not at shutdown — a crash or a killed process
+loses nothing. The key is stored in `%APPDATA%\AuctionFlipper\config.json` and never leaves your
 machine except in requests to `api.donutsmp.net`.
 
 Give it a few minutes. The tool is far better at its job after half an hour than after thirty
@@ -126,6 +128,15 @@ with a day of real prices behind it instead of nothing.
 Until an item has been seen to trade, the tool says so rather than guessing: values inferred from
 the ask ladder are labelled *from asks* and scored down hard.
 
+The standing book is kept too. What is currently for sale is written to
+`%APPDATA%\AuctionFlipper\book.snap` every five minutes and at shutdown, and read back at the next
+launch, so the board has prices from the first second instead of after a quarter of an hour of
+scanning — and the scan budget goes to re-verifying rather than rediscovering. Restored listings
+are treated as the claims they are: anything whose 24 h expiry has passed is dropped, a save older
+than six hours is ignored outright, and what does load is badged `UNCHECKED` and scored down until a
+collector sees it live again. Turn it off under Settings → Storage if you would rather always
+start cold.
+
 ---
 
 ## Reading the board
@@ -144,7 +155,9 @@ sits for two days.
   board. Select a row and the detail panel lists every reason it was marked down, in plain English.
 - **Badges** — `THIN` (little support at the resale price), `STALE` (has sat unsold for hours),
   `TRAP?` (discounted so far it is probably not what its id says), `1 SELLER` (one account is
-  setting this price, not the market).
+  setting this price, not the market), `UNCHECKED` (restored from the last session and not yet seen
+  live — it may already have been bought). Badges are translated along with the rest of the
+  interface.
 - **Age** — how long ago it was listed, from the server's own countdown, so it is accurate even
   though the feed is delayed. Rows glow for their first ten minutes.
 
@@ -214,6 +227,8 @@ Worth knowing before trusting any number:
   grade and profit thresholds but not the cooldown.
 - **Language** — English or German, switched live. Item names stay in English deliberately: they are
   what you have to type after `/ah` in game.
+- **Remember the order book between runs** — on by default. Off means every launch starts cold and
+  waits for the scan.
 
 ---
 
@@ -236,7 +251,10 @@ dotnet run --project src/AuctionFlipper -- --selftest    # the above, then <10 l
 window, that a trillion-coin troll listing cannot become an item's valuation, and that an
 implausible discount is flagged rather than celebrated. It also checks the two language tables
 agree key for key and placeholder for placeholder, since a mismatched `{0}` throws at the moment
-the string is shown rather than at build time.
+the string is shown rather than at build time; that the board's badges really do change language,
+which a table check cannot see; that a settings file round-trips with its pins, its language and
+its window rectangle intact; and that a saved book comes back without the listings that have since
+expired, with the rest marked unverified.
 
 `--selftest` additionally proves the live API still behaves as assumed — including that it accepts a
 JSON body on a GET request, which is the only way it accepts sort and search, and which everything
@@ -259,6 +277,23 @@ src/AuctionFlipper/
 ---
 
 ## Changelog
+
+### 1.3
+
+- **Warm start.** The standing book is saved every five minutes and read back at launch, so the
+  board is useful from the first second instead of after a quarter of an hour of scanning. Restored
+  listings are badged `UNCHECKED` until seen live, dropped once expired, and ignored entirely if the
+  save is more than six hours old.
+- **Fixed: settings could be lost.** Everything except pins reached disk only when the window closed
+  cleanly, and two running copies shared one file, so the second one to close overwrote the first.
+  Settings now save themselves seconds after they change, and a second copy refuses to start —
+  two copies also quietly spent twice the request budget on one key.
+- Window size, position and maximised state are remembered, and the app reopens on the screen you
+  left it on.
+- The Pinned tab carries its count, so pins are visible straight after a restart even before any of
+  those items has a live flip.
+- The row badges (`THIN`, `SWINGY`, `RISING`, `FALLING`, `TRAP?` …), the item categories and the
+  container contents note are translated — they were still English on a German board.
 
 ### 1.2
 

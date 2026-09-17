@@ -328,7 +328,14 @@ public sealed class Loc : INotifyPropertyChanged
         ["StatusRefreshed"] = "Refreshed {0}: {1} new listing(s).",
         ["StatusRefreshFailed"] = "Refresh failed: {0}",
         ["StatusLatency"] = "{0} ms average response",
-        ["StatusRestored"] = "Restored {0} sales from previous sessions.",
+        ["StatusRestored"] = "Restored {0} sales and {1} standing listings from previous sessions.",
+        ["AlreadyRunning"] = "Auction Flipper is already running. Two copies share one API key and one "
+                             + "settings file, so the second one is closing.",
+        ["WarmStart"] = "Remember the order book between runs",
+        ["WarmStartHint"] = "Writes what is currently for sale to disk every few minutes and reads it back at "
+                            + "the next launch, so the board has prices from the first second instead of after "
+                            + "a quarter of an hour of scanning. Anything restored is badged UNCHECKED until a "
+                            + "collector sees it live again, and a save older than six hours is ignored.",
         ["StatusDropped"] = "Dropped {0} listing(s) that are no longer on sale.",
         ["StatusRateLimited"] = "Rate limited by the server - backing off.",
         ["StatusDashboardFailed"] = "Could not open the dashboard: {0}",
@@ -348,6 +355,29 @@ public sealed class Loc : INotifyPropertyChanged
         ["FromAsks"] = "from asks",
         ["SourceUnknown"] = "unknown",
         ["Instant"] = "instant",
+
+        // row badges - short, shouty, and the first thing read on a busy board
+        ["BadgeNbt"] = "NBT?",
+        ["BadgeBox"] = "BOX",
+        ["BadgeTrap"] = "TRAP?",
+        ["BadgeThin"] = "THIN",
+        ["BadgeStale"] = "STALE",
+        ["BadgeSwingy"] = "SWINGY",
+        ["BadgeOneSeller"] = "1 SELLER",
+        ["BadgeNoSales"] = "NO SALES",
+        ["BadgeRising"] = "RISING",
+        ["BadgeFalling"] = "FALLING",
+        ["BadgeUnverified"] = "UNCHECKED",
+        ["BadgeOverBudget"] = "OVER BUDGET",
+
+        // item categories
+        ["CategoryCommodity"] = "Commodity",
+        ["CategoryBlock"] = "Block",
+        ["CategoryContainer"] = "Container",
+        ["CategoryGear"] = "Gear",
+        ["CategoryConsumable"] = "Consumable",
+        ["CategoryDecoration"] = "Decoration",
+        ["CategoryOther"] = "Other",
 
         // scoring notes
         ["NoteNoSales"] = "No sales observed yet - value is inferred from the ask ladder.",
@@ -371,6 +401,9 @@ public sealed class Loc : INotifyPropertyChanged
         ["NoteSlotsShort"] = "That is more distinct items than you can list at once, so it will take several rounds.",
         ["NoteAbsurdRoiBox"] = "A {0} return is not credible - one of the contents is probably valued wrongly.",
         ["NoteDominant"] = "{0} of the value is a single item, so this is really a bet on that one price.",
+        ["NoteUnverified"] = "Restored from the last session and not seen live yet - it may already have been "
+                             + "bought. Check it in game before counting on it.",
+        ["NoteContentsValue"] = "Contents value {0}; recoverable after undercuts {1}.",
     };
 
     // ---------------------------------------------------------------- German
@@ -590,7 +623,15 @@ public sealed class Loc : INotifyPropertyChanged
         ["StatusRefreshed"] = "{0} aktualisiert: {1} neue Angebote.",
         ["StatusRefreshFailed"] = "Aktualisierung fehlgeschlagen: {0}",
         ["StatusLatency"] = "{0} ms mittlere Antwortzeit",
-        ["StatusRestored"] = "{0} Verkäufe aus früheren Sitzungen geladen.",
+        ["StatusRestored"] = "{0} Verkäufe und {1} laufende Angebote aus früheren Sitzungen geladen.",
+        ["AlreadyRunning"] = "Auction Flipper läuft bereits. Zwei Kopien teilen sich einen API-Schlüssel "
+                             + "und eine Einstellungsdatei, deshalb wird die zweite geschlossen.",
+        ["WarmStart"] = "Orderbuch zwischen Starts merken",
+        ["WarmStartHint"] = "Schreibt alle paar Minuten auf die Festplatte, was gerade angeboten wird, und lädt "
+                            + "es beim nächsten Start zurück - das Board hat damit ab der ersten Sekunde Preise "
+                            + "statt erst nach einer Viertelstunde Scannen. Wiederhergestellte Angebote tragen "
+                            + "das Abzeichen UNGEPRÜFT, bis ein Sammler sie wieder live sieht; ein Stand, der "
+                            + "älter als sechs Stunden ist, wird verworfen.",
         ["StatusDropped"] = "{0} Angebote entfernt, die nicht mehr im Verkauf sind.",
         ["StatusRateLimited"] = "Vom Server gedrosselt - das Tool nimmt sich zurück.",
         ["StatusDashboardFailed"] = "Dashboard konnte nicht geöffnet werden: {0}",
@@ -610,6 +651,29 @@ public sealed class Loc : INotifyPropertyChanged
         ["FromAsks"] = "aus Angeboten",
         ["SourceUnknown"] = "unbekannt",
         ["Instant"] = "sofort",
+
+        // row badges - short, shouty, and the first thing read on a busy board
+        ["BadgeNbt"] = "NBT?",
+        ["BadgeBox"] = "KISTE",
+        ["BadgeTrap"] = "FALLE?",
+        ["BadgeThin"] = "DÜNN",
+        ["BadgeStale"] = "ALT",
+        ["BadgeSwingy"] = "SCHWANKT",
+        ["BadgeOneSeller"] = "1 VERKÄUFER",
+        ["BadgeNoSales"] = "KEINE VERKÄUFE",
+        ["BadgeRising"] = "STEIGT",
+        ["BadgeFalling"] = "FÄLLT",
+        ["BadgeUnverified"] = "UNGEPRÜFT",
+        ["BadgeOverBudget"] = "ÜBER BUDGET",
+
+        // item categories
+        ["CategoryCommodity"] = "Rohstoff",
+        ["CategoryBlock"] = "Block",
+        ["CategoryContainer"] = "Behälter",
+        ["CategoryGear"] = "Ausrüstung",
+        ["CategoryConsumable"] = "Verbrauchsgut",
+        ["CategoryDecoration"] = "Dekoration",
+        ["CategoryOther"] = "Sonstiges",
 
         // scoring notes
         ["NoteNoSales"] = "Noch keine Verkäufe beobachtet - der Wert stammt aus der Angebotsleiter.",
@@ -637,5 +701,8 @@ public sealed class Loc : INotifyPropertyChanged
                                + "falsch bewertet.",
         ["NoteDominant"] = "{0} des Werts steckt in einem einzigen Item - das hier ist in Wahrheit eine Wette "
                            + "auf genau diesen Preis.",
+        ["NoteUnverified"] = "Aus der letzten Sitzung wiederhergestellt und noch nicht live gesehen - kann "
+                             + "bereits gekauft sein. Vor dem Zuschlagen im Spiel prüfen.",
+        ["NoteContentsValue"] = "Inhaltswert {0}; nach Unterbieten erzielbar {1}.",
     };
 }

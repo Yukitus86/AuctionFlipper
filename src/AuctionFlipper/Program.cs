@@ -31,6 +31,27 @@ public static class Program
             return logicFailures == 0 && apiFailures == 0 ? 0 : 1;
         }
 
+        // One instance at a time. Two of them share one API key, so the pair quietly spends twice
+        // the request budget and gets rate limited - and they share one config file, where the last
+        // one to close overwrites whatever the other saved. That is how a pin, or a setting, can be
+        // made and then vanish without anything appearing to go wrong.
+        using var single = new Mutex(initiallyOwned: true, @"Local\AuctionFlipper.SingleInstance",
+            out bool firstInstance);
+
+        if (!firstInstance)
+        {
+            // Nothing has read the config yet in this process, and the one line the user will see
+            // should still be in their language.
+            Loc.Current.SetLanguage(Services.AppConfig.Load().Language);
+
+            System.Windows.MessageBox.Show(
+                Loc.T("AlreadyRunning"),
+                "Auction Flipper",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            return 2;
+        }
+
         var app = new App();
         app.InitializeComponent();
         return app.Run();

@@ -1,6 +1,8 @@
+using System.IO;
 using AuctionFlipper.Api;
 using AuctionFlipper.Core;
 using AuctionFlipper.Services;
+using AuctionFlipper.Ui;
 
 namespace AuctionFlipper;
 
@@ -38,6 +40,9 @@ public static class LogicTests
         failures += Check("a malformed page does not throw", IngestSurvivesNullRows);
         failures += Check("both languages carry the same strings", TranslationsAreComplete);
         failures += Check("a pinned item alerts below the threshold", PinnedItemsAlwaysAlert);
+        failures += Check("row badges follow the chosen language", BadgesAreTranslated);
+        failures += Check("settings survive a write and a reload", ConfigRoundTrips);
+        failures += Check("the saved book comes back without its dead listings", BookSnapshotRoundTrips);
 
         Console.WriteLine(new string('-', 66));
         Console.WriteLine(failures == 0 ? "ALL LOGIC CHECKS PASSED" : $"{failures} LOGIC CHECK(S) FAILED");
@@ -427,6 +432,186 @@ public static class LogicTests
               + $"placeholder mismatch [{string.Join(", ", mismatched)}]";
 
         return (ok, detail);
+    }
+
+    /// <summary>
+    /// The badges are the most-read text on the board and were the last place English survived a
+    /// switch to German. Reading them in both languages is the only way to catch a literal that
+    /// crept back in, since a hard-coded string passes every completeness check in the table.
+    /// </summary>
+    private static (bool, string) BadgesAreTranslated()
+    {
+        const FlipFlags sample = FlipFlags.ThinBook | FlipFlags.Volatile | FlipFlags.TrendingDown
+                                 | FlipFlags.TooGoodToBeTrue | FlipFlags.Unverified;
+
+        string original = Loc.Current.Language;
+        try
+        {
+            Loc.Current.SetLanguage("en");
+            string[] english = Format.Badges(sample).ToArray();
+
+            Loc.Current.SetLanguage("de");
+            string[] german = Format.Badges(sample).ToArray();
+
+            // Every badge in this sample is prose, so none of them may survive the switch unchanged.
+            int shared = english.Intersect(german, StringComparer.Ordinal).Count();
+
+            return (english.Length == 5 && german.Length == 5 && shared == 0,
+                $"english [{string.Join(" ", english)}] german [{string.Join(" ", german)}]");
+        }
+        finally
+        {
+            Loc.Current.SetLanguage(original);
+        }
+    }
+
+    // ------------------------------------------------------------------ persistence
+
+    /// <summary>
+    /// The settings file is the only memory the tool has of what the user chose, and a pin that
+    /// does not come back is indistinguishable from a pin that was never made. This writes a config
+    /// with every awkward field set - a list, a language, a window rectangle - reads it back, and
+    /// also checks the dirty flag, since the timed autosave only writes when that flag is set.
+    /// </summary>
+    private static (bool, string) ConfigRoundTrips()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"auctionflipper-config-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var written = new AppConfig
+            {
+                Language = "de",
+                PinnedItems = ["minecraft:netherite_ingot", "minecraft:wind_charge"],
+                BoardSort = "Roi",
+                LastSection = "Pinned",
+                ShowPerUnit = true,
+                DetailPanelWidth = 455,
+                WindowLeft = -1280,
+                WindowTop = 120,
+                WindowWidth = 1600,
+                WindowHeight = 980,
+                WindowMaximized = true,
+                MinNetProfit = 77_000,
+                WarmStart = false,
+            };
+
+            bool dirtyBeforeSave = written.IsDirty;
+            written.SaveTo(path);
+            bool cleanAfterSave = !written.IsDirty;
+
+            AppConfig read = AppConfig.LoadFrom(path);
+            bool cleanAfterLoad = !read.IsDirty;
+
+            // Assigning a property the value it already holds must not dirty the file, or the
+            // autosave would rewrite it every few seconds for as long as the app is open.
+            read.Language = "de";
+            bool noSpuriousDirty = !read.IsDirty;
+
+            read.Language = "en";
+            bool dirtyOnRealChange = read.IsDirty;
+
+            bool restored =
+                read.PinnedItems.Count == 2
+                && read.PinnedItems[0] == "minecraft:netherite_ingot"
+                && read.BoardSort == "Roi"
+                && read.LastSection == "Pinned"
+                && read.ShowPerUnit
+                && Math.Abs(read.DetailPanelWidth - 455) < 0.001
+                && Math.Abs(read.WindowLeft + 1280) < 0.001
+                && Math.Abs(read.WindowWidth - 1600) < 0.001
+                && read.WindowMaximized
+                && Math.Abs(read.MinNetProfit - 77_000) < 0.001
+                && !read.WarmStart;
+
+            bool ok = dirtyBeforeSave && cleanAfterSave && cleanAfterLoad
+                      && noSpuriousDirty && dirtyOnRealChange && restored;
+
+            return (ok,
+                $"{read.PinnedItems.Count} pin(s), section {read.LastSection}, "
+                + $"window {read.WindowWidth}x{read.WindowHeight}, dirty tracking "
+                + (noSpuriousDirty && dirtyOnRealChange ? "correct" : "wrong"));
+        }
+        finally
+        {
+            try { File.Delete(path); } catch (IOException) { }
+        }
+    }
+
+    /// <summary>
+    /// The warm start is only worth having if what comes back is true. A listing that has expired
+    /// since the file was written must not reappear, what does come back must be marked unverified
+    /// so the board can say so, and the ids must survive the trip - the snapshot carries its own
+    /// name table precisely so a restored price cannot end up attached to the wrong item.
+    /// </summary>
+    private static (bool, string) BookSnapshotRoundTrips()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"auctionflipper-book-{Guid.NewGuid():N}");
+
+        try
+        {
+            var saved = new MarketState(new AppConfig());
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            int ingot = saved.Items.GetOrAdd("minecraft:netherite_ingot");
+            int charge = saved.Items.GetOrAdd("minecraft:wind_charge");
+            int seller = saved.Sellers.GetOrAdd("Yukitus");
+
+            saved.Book.Add(MakeListing(ingot, 4, 6_000_000, seller, now), now);
+
+            // Already past its expiry by the time it is read back.
+            saved.Book.Add(new Listing
+            {
+                Fingerprint = Fingerprint.For(seller, charge, 16, 48_000),
+                ItemIndex = charge,
+                Count = 16,
+                Price = 48_000,
+                SellerIndex = seller,
+                ListedAtUnixMs = now - MarketConstants.ListingLifetimeMs + 60_000,
+                ExpiresAtUnixMs = now - 1,
+            }, now);
+
+            using (var writer = new Persistence(directory))
+                writer.SaveBook(saved);
+
+            // A second, independent market, with its registries filled in a different order on
+            // purpose: if the snapshot leaned on positional indexes, this is where the prices would
+            // cross over onto the wrong items.
+            var loaded = new MarketState(new AppConfig());
+            loaded.Items.GetOrAdd("minecraft:dirt");
+            loaded.Sellers.GetOrAdd("SomebodyElse");
+
+            int count;
+            using (var reader = new Persistence(directory))
+                count = reader.LoadBook(loaded, TimeSpan.FromHours(6));
+
+            int loadedIngot = loaded.Items.GetOrAdd("minecraft:netherite_ingot");
+            Listing[] ladder = loaded.Book.Ladder(loadedIngot, 4);
+
+            bool onlyLiveOne = count == 1 && loaded.Book.ListingCount == 1 && ladder.Length == 1;
+            bool samePrice = onlyLiveOne && Math.Abs(ladder[0].Price - 6_000_000) < 0.001
+                             && ladder[0].Count == 4;
+            bool marked = onlyLiveOne && ladder[0].Restored;
+            bool sellerKept = onlyLiveOne && loaded.Sellers.GetName(ladder[0].SellerIndex) == "Yukitus";
+
+            // An old file is worse than no file: the board would spend the session advertising
+            // listings that sold hours ago.
+            var stale = new MarketState(new AppConfig());
+            int refused;
+            using (var reader = new Persistence(directory))
+                refused = reader.LoadBook(stale, TimeSpan.Zero);
+
+            bool ok = onlyLiveOne && samePrice && marked && sellerKept && refused == 0;
+
+            return (ok,
+                $"{count} of 2 listings restored (expired one dropped), unverified={marked}, "
+                + $"seller={(sellerKept ? "kept" : "lost")}, stale file restored {refused}");
+        }
+        finally
+        {
+            try { Directory.Delete(directory, recursive: true); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
     }
 
     // ------------------------------------------------------------------ alerts

@@ -118,7 +118,8 @@
                         <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavBoard}"
                                      IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
                                                  ConverterParameter=Board, Mode=TwoWay}" />
-                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavPinned}"
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav"
+                                     Content="{Binding PinnedNavText}"
                                      IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
                                                  ConverterParameter=Pinned, Mode=TwoWay}" />
 

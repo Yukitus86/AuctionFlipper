@@ -78,6 +78,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (Enum.TryParse(config.BoardSort, out BoardSort savedSort))
             _sort = savedSort;
 
+        // Reopen on the screen the user left, not always on the board. Settings is excluded on
+        // purpose: it is where the app lands when there is no API key, and reopening on it after
+        // a visit would make it look like the key had been lost again.
+        if (Enum.TryParse(config.LastSection, out NavSection savedSection)
+            && savedSection != NavSection.Settings)
+        {
+            _section = savedSection;
+        }
+
         _statusMessage = Loc.T("StatusStarting");
 
         CopySearchCommand = new RelayCommand(_ => CopySearchText());
@@ -156,6 +165,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Raise(nameof(PauseButtonText));
         Raise(nameof(ConfigPathText));
         Raise(nameof(EmptyBoardHint));
+        Raise(nameof(PinnedNavText));
 
         // Rows and notes carry text that was formatted when they were built, so rebuild rather
         // than waiting for the next natural refresh to reach them.
@@ -175,6 +185,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         set
         {
             if (!Set(ref _section, value)) return;
+            Config.LastSection = value.ToString();
             Raise(nameof(IsBoardVisible));
             Raise(nameof(IsTapeVisible));
             Raise(nameof(IsItemsVisible));
@@ -234,6 +245,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public int PinnedCount => _pinned.Count;
 
     /// <summary>
+    /// The nav entry for the watchlist, carrying its size.
+    ///
+    /// The count is on the button because a pin is otherwise invisible until the item happens to
+    /// have a live flip: a restart with four pinned items and a cold book looks exactly like a
+    /// restart that forgot them.
+    /// </summary>
+    public string PinnedNavText => _pinned.Count > 0
+        ? $"{Loc.T("NavPinned")}  ·  {_pinned.Count}"
+        : Loc.T("NavPinned");
+
+    /// <summary>
     /// Adds or removes a pin and writes it straight through to disk.
     ///
     /// Saving on the click rather than on exit is deliberate: a watchlist that only survives a
@@ -257,6 +279,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Config.Save();
 
         Raise(nameof(PinnedCount));
+        Raise(nameof(PinnedNavText));
         Raise(nameof(EmptyBoardHint));
 
         foreach (FlipRowVm row in Flips)
@@ -448,6 +471,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         else if (IsItemsVisible) RefreshItems();
 
         if (_selected is not null) UpdateDetail();
+
+        // Settings reach disk while the app runs rather than on the way out. Closing is the one
+        // moment that is not guaranteed to happen - a crash, a killed process or a Windows restart
+        // all skip it - and a preferences file that only survives a polite exit is not a
+        // preferences file. The write itself is a few hundred bytes and only happens when
+        // something actually changed.
+        if (_tickCounter % 20 == 0) Config.SaveIfDirty();
     }
 
     private void UpdateStatus()
@@ -783,7 +813,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 SalesText = sales.SampleCount > 0 ? $"{sales.SampleCount} @ {Format.Rate(sales.SalesPerHour)}" : "-",
                 AsksText = book.AskCount.ToString("N0"),
                 LowestText = book.AskCount > 0 ? Format.Coins(book.LowestUnit) : "-",
-                CategoryText = info.Category.ToString(),
+                CategoryText = Format.CategoryLabel(info.Category),
                 NbtRisk = info.NbtRisk,
             });
         }
