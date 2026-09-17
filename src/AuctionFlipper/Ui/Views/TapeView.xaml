@@ -22,11 +22,12 @@
                        Margin="0,3,0,0" MaxWidth="980" HorizontalAlignment="Left" />
         </StackPanel>
 
-        <!-- Capped for the same reason as the item table: everything after the name is a fixed
-             column, so surplus width would push the prices away from the item they price. -->
+        <!-- Fills the window. Everything after the name is a fixed column, so the name is allowed
+             to grow only as far as a long item name needs; past that the surplus a wide monitor
+             brings goes to the trailing spacer instead, which is what keeps the prices beside the
+             item they price rather than out at the far edge of the screen. -->
         <Border Grid.Row="1" Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
-                BorderThickness="1" CornerRadius="{StaticResource R.Large}"
-                MaxWidth="960" HorizontalAlignment="Left">
+                BorderThickness="1" CornerRadius="{StaticResource R.Large}">
             <!--
                 CanContentScroll is what actually turns virtualisation on here.
 
@@ -59,16 +60,17 @@
                         <Grid Height="34" Margin="4,1">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" MinWidth="160" />
+                                <ColumnDefinition Width="3*" MinWidth="160" MaxWidth="460" />
                                 <ColumnDefinition Width="120" />
                                 <ColumnDefinition Width="120" />
                                 <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <ctl:ItemChip Width="22" Height="22" Corner="4" Hue="{Binding Hue}"
-                                          Monogram="{Binding Monogram}" VerticalAlignment="Center"
-                                          Margin="0,0,10,0" />
+                            <ctl:ItemChip Width="24" Height="24" Corner="4" Hue="{Binding Hue}"
+                                          ItemId="{Binding ItemId}" Monogram="{Binding Monogram}"
+                                          VerticalAlignment="Center" Margin="0,0,10,0" />
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />

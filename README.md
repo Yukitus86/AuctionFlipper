@@ -148,6 +148,10 @@ sits for two days.
 
 - **Grade spine** — the coloured bar on the left. S is exceptional, C is marginal. A grade needs
   profit, margin *and* confidence at once; a huge margin on an item nothing is known about is a C.
+- **Item icon** — the item's own inventory picture, in a slot, exactly as it looks in game. It is
+  what you recognise before you have read anything, which is the whole point on a list that
+  reorders four times a second. An item the icon sheet does not cover falls back to a coloured tile
+  with the item's initials.
 - **Net profit** — after tax, after undercutting the next ask. Brighter means bigger.
 - **Sold / h** — how fast the item is actually trading, measured from the sale tape. A wide margin
   on something that sells twice a day is a listing slot tied up, not a profit.
@@ -217,6 +221,8 @@ Worth knowing before trusting any number:
 
 ## Settings worth changing
 
+- **API key** — masked by default, because this screen gets opened while someone is streaming.
+  The eye beside the field reveals it.
 - **Capital** — flips above it are badged `OVER BUDGET` rather than hidden.
 - **Minimum confidence** — the most effective filter. Raise it to see only flips priced from
   observed sales.
@@ -229,14 +235,6 @@ Worth knowing before trusting any number:
   what you have to type after `/ah` in game.
 - **Remember the order book between runs** — on by default. Off means every launch starts cold and
   waits for the scan.
-
----
-
-## Web dashboard
-
-The same board is served read-only at `http://127.0.0.1:8730/`, streamed over server-sent events —
-useful on a second monitor while the game has the foreground. It binds to loopback only and the API
-key is never sent to the page.
 
 ---
 
@@ -253,8 +251,10 @@ implausible discount is flagged rather than celebrated. It also checks the two l
 agree key for key and placeholder for placeholder, since a mismatched `{0}` throws at the moment
 the string is shown rather than at build time; that the board's badges really do change language,
 which a table check cannot see; that a settings file round-trips with its pins, its language and
-its window rectangle intact; and that a saved book comes back without the listings that have since
-expired, with the rest marked unverified.
+its window rectangle intact; that a saved book comes back without the listings that have since
+expired, with the rest marked unverified; and that the icon sheet is really in the build and still
+lines up with its index, since a sheet that quietly went missing would only show as items losing
+their pictures.
 
 `--selftest` additionally proves the live API still behaves as assumed — including that it accepts a
 JSON body on a GET request, which is the only way it accepts sort and search, and which everything
@@ -268,15 +268,50 @@ here depends on.
 src/AuctionFlipper/
   Api/        HTTP client, sliding-window rate limiter, wire models
   Core/       order book, sale tape, valuation, flip scoring, container pricing
-  Services/   the three collectors, persistence, alerts, dashboard server
+  Services/   the three collectors, persistence, alerts
   Ui/         WPF board, views, custom-drawn charts and gauges
-  Web/        the dashboard page, embedded in the executable
+  Assets/     the item icon sheet and its index, embedded in the executable
   Localization.cs   the English and German string tables
 ```
 
 ---
 
+## Item icons
+
+Every item is drawn with its real inventory icon. They are baked into the executable as one
+2048x864 sheet plus a text index mapping each `minecraft:` id to a cell, so the tool never fetches
+anything while it runs and works with no internet connection at all.
+
+The pictures are the inventory icons published on [minecraft.wiki](https://minecraft.wiki/), which
+carries them under CC BY-NC-SA 3.0; the underlying textures are Mojang's. The sheet covers 1,763
+ids across 1,686 distinct pictures — 1,371 of the 1,374 ids this account has ever seen on the
+auction house. Anything not covered keeps the old coloured tile, so a block added to the server
+tomorrow still gets a row that reads.
+
+Ids are matched to pictures through Minecraft's own English name table, also hosted on the wiki,
+since the wiki names a picture after the item rather than after its id — `minecraft:gold_block` is
+filed under "Block of Gold".
+
+---
+
 ## Changelog
+
+### 1.4
+
+- **Real item icons.** Every row on the board, the sale tape, the item table, the hover card, the
+  detail panel and the alert popup now show the item's own inventory picture instead of a coloured
+  tile with its initials. Nothing is downloaded at runtime — the sheet ships inside the binary.
+- **The API key is masked.** It used to sit on the settings screen in plain text. It is now dots,
+  with an eye to reveal it.
+- **The sale tape and item price tables fill the window.** They were capped at a fixed width, so on
+  a wide monitor most of the screen was empty. The name column is capped instead, which keeps the
+  figures beside the item they describe rather than out at the far edge.
+- The detail panel carries the item's icon and its grade, the way the hover card does. The panel
+  stays open while the board reorders under it, so it was the one place the item had to be
+  identified by reading its name.
+- **Removed: the local web dashboard.** It served the board read-only on `127.0.0.1` for a second
+  monitor. Nobody used it, and dropping it takes an HTTP server, a page and a port out of a tool
+  that only ever needed to be a desktop app.
 
 ### 1.3
 

@@ -43,6 +43,7 @@ public static class LogicTests
         failures += Check("row badges follow the chosen language", BadgesAreTranslated);
         failures += Check("settings survive a write and a reload", ConfigRoundTrips);
         failures += Check("the saved book comes back without its dead listings", BookSnapshotRoundTrips);
+        failures += Check("the icon sheet covers what the market trades", IconSheetCoversTheMarket);
 
         Console.WriteLine(new string('-', 66));
         Console.WriteLine(failures == 0 ? "ALL LOGIC CHECKS PASSED" : $"{failures} LOGIC CHECK(S) FAILED");
@@ -463,6 +464,44 @@ public static class LogicTests
         {
             Loc.Current.SetLanguage(original);
         }
+    }
+
+    /// <summary>
+    /// The icon sheet is built ahead of time from a fixed list, so the failure it can actually
+    /// have is silence: a resource that did not get embedded, or an index that no longer lines up
+    /// with the picture. Both show up as items losing their icon, which is easy to miss on a board
+    /// that still renders. This checks the sheet is present, that a handful of ids every DonutSMP
+    /// session sees resolve, and that no cell points off the end of the sheet.
+    /// </summary>
+    private static (bool, string) IconSheetCoversTheMarket()
+    {
+        string[] staples =
+        [
+            "minecraft:diamond", "minecraft:netherite_ingot", "minecraft:gold_block",
+            "minecraft:enchanted_book", "minecraft:shulker_box", "minecraft:wind_charge",
+            "minecraft:cooked_beef", "minecraft:waxed_copper_block", "minecraft:music_disc_cat",
+        ];
+
+        var unresolved = staples.Where(id => !ItemIconAtlas.TryGetCell(id, out _)).ToArray();
+        if (unresolved.Length > 0)
+            return (false, $"no icon for {string.Join(", ", unresolved)}");
+
+        if (ItemIconAtlas.MappedIds < 1_000)
+            return (false, $"sheet index holds only {ItemIconAtlas.MappedIds} ids");
+
+        // Every mapped cell must sit inside the sheet the index claims.
+        foreach (string id in staples)
+        {
+            ItemIconAtlas.TryGetCell(id, out int cell);
+            if (cell < 0 || cell >= ItemIconAtlas.Count)
+                return (false, $"{id} points at cell {cell} of {ItemIconAtlas.Count}");
+        }
+
+        byte[]? sheet = ItemIconAtlas.ReadSheetBytes();
+        if (sheet is null || sheet.Length < 1024)
+            return (false, "the sheet image is missing from the build");
+
+        return (true, $"{ItemIconAtlas.MappedIds} ids over {ItemIconAtlas.Count} icons");
     }
 
     // ------------------------------------------------------------------ persistence

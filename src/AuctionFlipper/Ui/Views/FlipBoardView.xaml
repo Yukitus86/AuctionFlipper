@@ -48,6 +48,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <ctl:ItemChip Width="34" Height="34" Corner="6" Hue="{Binding Hue}"
+                                                  ItemId="{Binding ItemId}"
                                                   Monogram="{Binding Monogram}" VerticalAlignment="Center"
                                                   Margin="0,0,11,0" />
 
@@ -246,7 +247,7 @@
 
                     <Grid Grid.Column="1" Margin="10,0,8,0" HorizontalAlignment="Center">
                         <ctl:ItemChip Width="32" Height="32" Hue="{Binding Hue}"
-                                      Monogram="{Binding Monogram}" />
+                                      ItemId="{Binding ItemId}" Monogram="{Binding Monogram}" />
                         <Border Background="{StaticResource B.Bg}" CornerRadius="3" Padding="3,0"
                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-4,-3"
                                 Visibility="{Binding CountText, Converter={StaticResource BoolToVis}}">
@@ -515,10 +516,42 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
                     <StackPanel Margin="16">
-                        <TextBlock Text="{Binding DetailTitle}" FontSize="15" FontWeight="SemiBold"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource T.MonoMuted}"
-                                   FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,12" />
+
+                        <!--
+                            Same header as the hover card: the item's own picture on the left, the
+                            grade on the right. The panel outlives the hover card - it stays open
+                            while the board reorders underneath it - so without these two it was
+                            the one place the item had to be identified by reading its name.
+
+                            Bound through Selected rather than through copies on the view model,
+                            because the row object is updated in place on every refresh and already
+                            raises change notifications for all four.
+                        -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ctl:ItemChip Width="40" Height="40" Corner="7"
+                                          Hue="{Binding Selected.Hue}"
+                                          ItemId="{Binding Selected.ItemId}"
+                                          Monogram="{Binding Selected.Monogram}"
+                                          VerticalAlignment="Top" Margin="0,1,12,0" />
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding DetailTitle}" FontSize="15" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource T.MonoMuted}"
+                                           FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="2" Text="{Binding Selected.GradeText}"
+                                       FontFamily="{StaticResource F.Mono}" FontSize="26"
+                                       FontWeight="Bold" VerticalAlignment="Top" Margin="10,-3,0,0"
+                                       Foreground="{Binding Selected.GradeBrush}" />
+                        </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Button Content="{ui:Tr CopySearch}" Style="{StaticResource Btn.Accent}"

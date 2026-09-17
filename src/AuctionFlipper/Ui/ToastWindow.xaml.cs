@@ -35,6 +35,7 @@ public partial class ToastWindow : Window
     public void ShowFlip(FlipOpportunity flip, bool copied)
     {
         Chip.Hue = flip.Info.Hue;
+        Chip.ItemId = flip.Info.Id;
         Chip.Monogram = Format.Monogram(flip.Info.DisplayName);
 
         TitleText.Text = flip.Count > 1

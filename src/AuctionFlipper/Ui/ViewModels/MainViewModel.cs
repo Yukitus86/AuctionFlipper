@@ -13,6 +13,7 @@ public enum BoardSort { ProfitPerHour, NetProfit, Roi, Fastest, Newest }
 
 public sealed class TapeRowVm
 {
+    public required string ItemId { get; init; }
     public required string ItemName { get; init; }
     public required string Monogram { get; init; }
     public required double Hue { get; init; }
@@ -99,7 +100,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         SaveSettingsCommand = new RelayCommand(_ => SaveSettings());
         TogglePauseCommand = new RelayCommand(_ => _ = TogglePauseAsync());
         TestAlertCommand = new RelayCommand(_ => _coordinator.Alerts.PlayPing());
-        OpenDashboardCommand = new RelayCommand(_ => OpenDashboard());
 
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -125,7 +125,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand SaveSettingsCommand { get; }
     public RelayCommand TogglePauseCommand { get; }
     public RelayCommand TestAlertCommand { get; }
-    public RelayCommand OpenDashboardCommand { get; }
 
     // ------------------------------------------------------------------ language
 
@@ -446,8 +445,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     /// <summary>Lets the window push a message into the status bar without owning the property.</summary>
     public void StatusMessageFromHost(string message) => StatusMessage = message;
 
-    public string DashboardUrl => $"http://127.0.0.1:{Config.DashboardPort}/";
-
     public string ConfigPathText => Loc.T("ConfigPath", AppConfig.ConfigPath);
 
     private string _storageText = "";
@@ -765,6 +762,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             rows.Add(new TapeRowVm
             {
+                ItemId = id,
                 ItemName = info.DisplayName,
                 Monogram = Format.Monogram(info.DisplayName),
                 Hue = info.Hue,
@@ -901,21 +899,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _coordinator.ApplyConfig(Config);
         StatusMessage = Loc.T("StatusSaved", AppConfig.ConfigPath);
         RefreshBoard();
-    }
-
-    private void OpenDashboard()
-    {
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(DashboardUrl)
-            {
-                UseShellExecute = true,
-            });
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = Loc.T("StatusDashboardFailed", ex.Message);
-        }
     }
 
     public void Dispose()

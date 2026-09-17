@@ -27,6 +27,9 @@ public sealed class FlipRowVm : ObservableObject
     public FlipOpportunity Flip => _flip;
     public ulong Fingerprint => _flip.Listing.Fingerprint;
 
+    private string _itemId = "";
+    public string ItemId { get => _itemId; private set => Set(ref _itemId, value); }
+
     private string _itemName = "";
     public string ItemName { get => _itemName; private set => Set(ref _itemName, value); }
 
@@ -153,6 +156,7 @@ public sealed class FlipRowVm : ObservableObject
     {
         _flip = flip;
 
+        ItemId = flip.Info.Id;
         ItemName = flip.Info.DisplayName;
         Monogram = Format.Monogram(flip.Info.DisplayName);
         Hue = flip.Info.Hue;

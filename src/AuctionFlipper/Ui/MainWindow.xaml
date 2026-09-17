@@ -106,13 +106,6 @@
             <Border Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
                     BorderThickness="0,0,1,0">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Bottom" Margin="14,0,14,14">
-                        <Button Content="{ui:Tr OpenDashboard}" Command="{Binding OpenDashboardCommand}"
-                                HorizontalAlignment="Stretch" Margin="0,0,0,6" />
-                        <TextBlock Text="{Binding DashboardUrl}" Style="{StaticResource T.MonoMuted}"
-                                   FontSize="10" TextAlignment="Center" />
-                    </StackPanel>
-
                     <StackPanel Margin="0,10,0,0">
                         <TextBlock Text="{ui:Tr NavMarket}" Style="{StaticResource T.Label}" Margin="20,6,0,4" />
                         <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavBoard}"

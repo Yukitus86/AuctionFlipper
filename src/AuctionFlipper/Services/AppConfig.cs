@@ -128,13 +128,6 @@ public sealed class AppConfig
     private bool _sweeperEnabled = true;
     public bool SweeperEnabled { get => _sweeperEnabled; set => Track(ref _sweeperEnabled, value); }
 
-    // ---- dashboard ----
-    private bool _dashboardEnabled = true;
-    public bool DashboardEnabled { get => _dashboardEnabled; set => Track(ref _dashboardEnabled, value); }
-
-    private int _dashboardPort = 8730;
-    public int DashboardPort { get => _dashboardPort; set => Track(ref _dashboardPort, value); }
-
     // ---- storage ----
     private int _saleRetentionDays = 14;
     public int SaleRetentionDays { get => _saleRetentionDays; set => Track(ref _saleRetentionDays, value); }

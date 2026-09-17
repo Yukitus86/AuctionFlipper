@@ -43,13 +43,31 @@
                 <StackPanel>
                     <TextBlock Text="{ui:Tr SecConnection}" Style="{StaticResource T.Label}" Margin="0,0,0,8" />
                     <TextBlock Text="{ui:Tr ConnectionHint}" Style="{StaticResource Hint}" />
+                    <!--
+                        The key is masked by default, because this screen gets opened while someone
+                        is streaming or looking over a shoulder, and the key is the whole account.
+
+                        Two controls rather than one: a PasswordBox cannot be bound - its Password
+                        property is deliberately not a dependency property - so the bound TextBox
+                        stays the source of truth and the code-behind mirrors the two.
+                    -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{ui:Tr ApiKey}" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1" Text="{Binding Config.ApiKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Grid Grid.Column="1">
+                            <PasswordBox x:Name="ApiKeyMasked" PasswordChanged="OnApiKeyMaskedChanged" />
+                            <TextBox x:Name="ApiKeyPlain" Visibility="Collapsed"
+                                     TextChanged="OnApiKeyPlainChanged"
+                                     Text="{Binding Config.ApiKey, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                        <ToggleButton x:Name="ApiKeyReveal" Grid.Column="2" Margin="8,0,0,0"
+                                      Style="{StaticResource Btn.Eye}"
+                                      Checked="OnApiKeyRevealToggled" Unchecked="OnApiKeyRevealToggled"
+                                      ToolTip="{ui:Tr ShowApiKey}" />
                     </Grid>
                     <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
                                Text="{Binding ConfigPathText}" />
@@ -282,13 +300,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- ============ dashboard and storage ============ -->
+            <!-- ============ storage ============ -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="{ui:Tr SecDashboard}" Style="{StaticResource T.Label}" Margin="0,0,0,8" />
-
-                    <CheckBox Content="{ui:Tr DashboardEnabled}" IsChecked="{Binding Config.DashboardEnabled}" />
-                    <TextBlock Text="{ui:Tr DashboardHint}" Style="{StaticResource Hint}" />
+                    <TextBlock Text="{ui:Tr SecStorage}" Style="{StaticResource T.Label}" Margin="0,0,0,8" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -298,19 +313,12 @@
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="34" />
-                            <RowDefinition Height="34" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="{ui:Tr Port}" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{ui:Tr KeepHistory}" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding Config.DashboardPort, Converter={StaticResource Int}}" />
-                        <TextBlock Grid.Column="2" Text="{Binding DashboardUrl}"
-                                   Style="{StaticResource FieldLabel}" Margin="10,0,0,0" />
-
-                        <TextBlock Grid.Row="1" Text="{ui:Tr KeepHistory}" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Row="1" Grid.Column="1"
                                  Text="{Binding Config.SaleRetentionDays, Converter={StaticResource Int}}" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{ui:Tr KeepHistoryHint}"
+                        <TextBlock Grid.Column="2" Text="{ui:Tr KeepHistoryHint}"
                                    Style="{StaticResource FieldLabel}" Margin="10,0,0,0" />
                     </Grid>
 

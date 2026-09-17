@@ -63,7 +63,6 @@ public partial class MainWindow : Window
     private readonly AppConfig _config;
     private readonly Coordinator _coordinator;
     private readonly MainViewModel _viewModel;
-    private WebDashboardServer? _dashboard;
     private ToastWindow? _toast;
 
     public MainWindow()
@@ -100,48 +99,6 @@ public partial class MainWindow : Window
         }
 
         _coordinator.Start();
-        StartDashboard();
-    }
-
-    private void StartDashboard()
-    {
-        if (!_config.DashboardEnabled) return;
-
-        _dashboard = new WebDashboardServer(_config.DashboardPort, BuildDashboardSnapshot);
-        _dashboard.Start();
-
-        if (!_dashboard.IsRunning && _dashboard.LastError is { Length: > 0 } error)
-            _viewModel.StatusMessageFromHost(error);
-    }
-
-    private DashboardSnapshot BuildDashboardSnapshot()
-    {
-        MarketStatus status = _coordinator.GetStatus();
-
-        // The dashboard shows the same ranking the desktop board does, so the two never disagree
-        // about which flip is best.
-        FlipOpportunity[] flips = _coordinator.Market.CurrentFlips()
-            .Where(f => f.NetProfit >= _config.MinNetProfit
-                        && f.Roi >= _config.MinRoi
-                        && f.Confidence >= _config.MinConfidence
-                        && !f.Flags.HasFlag(FlipFlags.NbtRisk))
-            .OrderByDescending(f => f.Score)
-            .Take(120)
-            .ToArray();
-
-        return new DashboardSnapshot(
-            status.Budget.Used,
-            status.Budget.Limit,
-            $"{status.BookListings:N0} listings / {status.BookItems:N0} items",
-            status.TapeSales > 0
-                ? $"{status.TapeSales:N0} sales over {Format.Duration(status.TapeSpan)}"
-                : "warming up",
-            $"{status.Sniper.NewListingsPerMinute:0.#}/min",
-            status.Sweeper.Running
-                ? $"{status.Sweeper.CoverageFraction:P0} ({status.Sweeper.PagesVisited:N0}/{status.Sweeper.EstimatedTotalPages:N0})"
-                : "paused",
-            Format.Duration(status.Uptime),
-            flips);
     }
 
     private void OnAlert(FlipOpportunity flip)
@@ -230,7 +187,6 @@ public partial class MainWindow : Window
     {
         _viewModel.Dispose();
         _toast?.Close();
-        _dashboard?.Dispose();
         SavePlacement();
         _config.Save();
         _coordinator.Dispose();

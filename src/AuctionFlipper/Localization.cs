@@ -138,7 +138,6 @@ public sealed class Loc : INotifyPropertyChanged
         ["NavItems"] = "Item prices",
         ["NavSetup"] = "SETUP",
         ["NavSettings"] = "Settings",
-        ["OpenDashboard"] = "Open web dashboard",
 
         // board
         ["BoardTitle"] = "Flip board",
@@ -232,8 +231,11 @@ public sealed class Loc : INotifyPropertyChanged
         ["SettingsTitle"] = "Settings",
         ["SecConnection"] = "CONNECTION",
         ["ConnectionHint"] = "Generate a key in game with /api. It is stored in your Windows app-data folder, "
-                             + "never in the project, and is never sent anywhere except api.donutsmp.net.",
+                             + "never in the project, and is never sent anywhere except api.donutsmp.net. "
+                             + "It is masked here; the eye beside it reveals it.",
         ["ApiKey"] = "API key",
+        ["ShowApiKey"] = "Show the key",
+        ["HideApiKey"] = "Hide the key",
 
         ["SecLanguage"] = "LANGUAGE",
         ["LanguageHint"] = "Changes apply immediately and are remembered. Item names come from the server and "
@@ -308,11 +310,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["YourClicksHint"] = "held back so manual refreshes never queue behind the collectors",
         ["SweeperEnabled"] = "Scan the standing order book with leftover budget",
 
-        ["SecDashboard"] = "DASHBOARD AND STORAGE",
-        ["DashboardEnabled"] = "Serve the local web dashboard",
-        ["DashboardHint"] = "Bound to 127.0.0.1 only, read-only, and the API key is never sent to the page. "
-                            + "Changing the port takes effect the next time the app starts.",
-        ["Port"] = "Port",
+        ["SecStorage"] = "STORAGE",
         ["KeepHistory"] = "Keep sale history",
         ["KeepHistoryHint"] = "days of recorded sales to keep on disk",
         ["SaveSettings"] = "Save settings",
@@ -338,7 +336,6 @@ public sealed class Loc : INotifyPropertyChanged
                             + "collector sees it live again, and a save older than six hours is ignored.",
         ["StatusDropped"] = "Dropped {0} listing(s) that are no longer on sale.",
         ["StatusRateLimited"] = "Rate limited by the server - backing off.",
-        ["StatusDashboardFailed"] = "Could not open the dashboard: {0}",
         ["StoragePath"] = "Sale history: {0} MB in {1}",
         ["ConfigPath"] = "Stored in {0}",
 
@@ -429,7 +426,6 @@ public sealed class Loc : INotifyPropertyChanged
         ["NavItems"] = "Item-Preise",
         ["NavSetup"] = "EINRICHTUNG",
         ["NavSettings"] = "Einstellungen",
-        ["OpenDashboard"] = "Web-Dashboard öffnen",
 
         // board
         ["BoardTitle"] = "Flip-Board",
@@ -526,8 +522,11 @@ public sealed class Loc : INotifyPropertyChanged
         ["SettingsTitle"] = "Einstellungen",
         ["SecConnection"] = "VERBINDUNG",
         ["ConnectionHint"] = "Erzeuge im Spiel mit /api einen Schlüssel. Er wird in deinem Windows-App-Data-Ordner "
-                             + "gespeichert, niemals im Projekt, und geht an niemanden außer api.donutsmp.net.",
+                             + "gespeichert, niemals im Projekt, und geht an niemanden außer api.donutsmp.net. "
+                             + "Hier ist er verdeckt; das Auge daneben zeigt ihn.",
         ["ApiKey"] = "API-Schlüssel",
+        ["ShowApiKey"] = "Schlüssel anzeigen",
+        ["HideApiKey"] = "Schlüssel verbergen",
 
         ["SecLanguage"] = "SPRACHE",
         ["LanguageHint"] = "Änderungen gelten sofort und werden gespeichert. Item-Namen kommen vom Server und "
@@ -603,11 +602,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["YourClicksHint"] = "zurückgehalten, damit manuelle Aktualisierungen nie hinter den Sammlern warten",
         ["SweeperEnabled"] = "Das stehende Orderbuch mit dem Restbudget scannen",
 
-        ["SecDashboard"] = "DASHBOARD UND SPEICHER",
-        ["DashboardEnabled"] = "Lokales Web-Dashboard bereitstellen",
-        ["DashboardHint"] = "Nur an 127.0.0.1 gebunden, nur lesend, und der API-Schlüssel geht nie an die Seite. "
-                            + "Eine Portänderung greift beim nächsten Start.",
-        ["Port"] = "Port",
+        ["SecStorage"] = "SPEICHER",
         ["KeepHistory"] = "Verkaufshistorie behalten",
         ["KeepHistoryHint"] = "Tage aufgezeichneter Verkäufe, die auf der Platte bleiben",
         ["SaveSettings"] = "Einstellungen speichern",
@@ -634,7 +629,6 @@ public sealed class Loc : INotifyPropertyChanged
                             + "älter als sechs Stunden ist, wird verworfen.",
         ["StatusDropped"] = "{0} Angebote entfernt, die nicht mehr im Verkauf sind.",
         ["StatusRateLimited"] = "Vom Server gedrosselt - das Tool nimmt sich zurück.",
-        ["StatusDashboardFailed"] = "Dashboard konnte nicht geöffnet werden: {0}",
         ["StoragePath"] = "Verkaufshistorie: {0} MB in {1}",
         ["ConfigPath"] = "Gespeichert in {0}",
 
