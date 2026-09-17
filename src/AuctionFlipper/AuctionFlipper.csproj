@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>AuctionFlipper</AssemblyName>
+    <RootNamespace>AuctionFlipper</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Product>Auction Flipper</Product>
+    <AssemblyTitle>Auction Flipper</AssemblyTitle>
+    <Description>Tracks the DonutSMP auction house and ranks profitable flips.</Description>
+
+    <!-- The app's own strings are a hand-rolled table in Localization.cs, not satellite assemblies.
+         This keeps the framework's own satellites out of the single file. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- App.xaml is compiled as a Page so Program.cs can own Main and offer a console self-test. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <StartupObject>AuctionFlipper.Program</StartupObject>
+
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Web\**\*" Exclude="Web\.placeholder" />
+  </ItemGroup>
+
+</Project>

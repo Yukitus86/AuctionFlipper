@@ -1,0 +1,85 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--
+        Palette. A trading-desk surface: near-black backgrounds so the money numbers carry the
+        colour, one warm accent for the brand, and a fixed meaning for every hue:
+        green = profit, red = loss, amber = attention, cyan = information.
+    -->
+
+    <Color x:Key="C.Bg">#FF090C11</Color>
+    <Color x:Key="C.Surface">#FF11161E</Color>
+    <Color x:Key="C.SurfaceAlt">#FF161C26</Color>
+    <Color x:Key="C.SurfaceRaised">#FF1D2430</Color>
+    <Color x:Key="C.Border">#FF232C39</Color>
+    <Color x:Key="C.BorderStrong">#FF334053</Color>
+
+    <Color x:Key="C.Text">#FFE8EEF7</Color>
+    <Color x:Key="C.TextMuted">#FF8C99AC</Color>
+    <Color x:Key="C.TextDim">#FF5A6677</Color>
+
+    <Color x:Key="C.Accent">#FFFFB020</Color>
+    <Color x:Key="C.AccentDim">#FF8A5F12</Color>
+    <Color x:Key="C.Profit">#FF2ED47A</Color>
+    <Color x:Key="C.ProfitBright">#FF5BF29B</Color>
+    <Color x:Key="C.Loss">#FFFF5C5C</Color>
+    <Color x:Key="C.Info">#FF35C2E4</Color>
+    <Color x:Key="C.Rare">#FFC77DFF</Color>
+
+    <!-- Grade spine colours: S rare, A profit, B info, C muted. -->
+    <Color x:Key="C.GradeS">#FFC77DFF</Color>
+    <Color x:Key="C.GradeA">#FF2ED47A</Color>
+    <Color x:Key="C.GradeB">#FF35C2E4</Color>
+    <Color x:Key="C.GradeC">#FF7A8798</Color>
+
+    <SolidColorBrush x:Key="B.Bg" Color="{StaticResource C.Bg}" />
+    <SolidColorBrush x:Key="B.Surface" Color="{StaticResource C.Surface}" />
+    <SolidColorBrush x:Key="B.SurfaceAlt" Color="{StaticResource C.SurfaceAlt}" />
+    <SolidColorBrush x:Key="B.SurfaceRaised" Color="{StaticResource C.SurfaceRaised}" />
+    <SolidColorBrush x:Key="B.Border" Color="{StaticResource C.Border}" />
+    <SolidColorBrush x:Key="B.BorderStrong" Color="{StaticResource C.BorderStrong}" />
+
+    <SolidColorBrush x:Key="B.Text" Color="{StaticResource C.Text}" />
+    <SolidColorBrush x:Key="B.TextMuted" Color="{StaticResource C.TextMuted}" />
+    <SolidColorBrush x:Key="B.TextDim" Color="{StaticResource C.TextDim}" />
+
+    <SolidColorBrush x:Key="B.Accent" Color="{StaticResource C.Accent}" />
+    <SolidColorBrush x:Key="B.AccentDim" Color="{StaticResource C.AccentDim}" />
+    <SolidColorBrush x:Key="B.Profit" Color="{StaticResource C.Profit}" />
+    <SolidColorBrush x:Key="B.ProfitBright" Color="{StaticResource C.ProfitBright}" />
+    <SolidColorBrush x:Key="B.Loss" Color="{StaticResource C.Loss}" />
+    <SolidColorBrush x:Key="B.Info" Color="{StaticResource C.Info}" />
+    <SolidColorBrush x:Key="B.Rare" Color="{StaticResource C.Rare}" />
+
+    <SolidColorBrush x:Key="B.GradeS" Color="{StaticResource C.GradeS}" />
+    <SolidColorBrush x:Key="B.GradeA" Color="{StaticResource C.GradeA}" />
+    <SolidColorBrush x:Key="B.GradeB" Color="{StaticResource C.GradeB}" />
+    <SolidColorBrush x:Key="B.GradeC" Color="{StaticResource C.GradeC}" />
+
+    <!-- Subtle vertical lift on the app chrome so panels read as layered, not flat. -->
+    <LinearGradientBrush x:Key="B.HeaderFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF161D28" Offset="0" />
+        <GradientStop Color="#FF0E131B" Offset="1" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="B.RowHot" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#302ED47A" Offset="0" />
+        <GradientStop Color="#002ED47A" Offset="0.7" />
+    </LinearGradientBrush>
+
+    <!-- Typography. Numbers use a monospaced face so columns of coins line up on the digit. -->
+    <FontFamily x:Key="F.Sans">Segoe UI</FontFamily>
+    <FontFamily x:Key="F.Mono">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+    <sys:Double x:Key="S.FontTiny">10</sys:Double>
+    <sys:Double x:Key="S.FontSmall">11.5</sys:Double>
+    <sys:Double x:Key="S.FontBase">13</sys:Double>
+    <sys:Double x:Key="S.FontLarge">16</sys:Double>
+    <sys:Double x:Key="S.FontHuge">21</sys:Double>
+
+    <CornerRadius x:Key="R.Small">3</CornerRadius>
+    <CornerRadius x:Key="R.Medium">5</CornerRadius>
+    <CornerRadius x:Key="R.Large">8</CornerRadius>
+
+</ResourceDictionary>

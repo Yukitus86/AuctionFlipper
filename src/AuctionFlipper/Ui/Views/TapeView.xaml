@@ -1,0 +1,121 @@
+<UserControl x:Class="AuctionFlipper.Ui.Views.TapeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:AuctionFlipper.Ui"
+             xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             Background="{StaticResource B.Bg}">
+
+    <UserControl.Resources>
+        <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="18,14,18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,10">
+            <TextBlock Text="{ui:Tr TapeTitle}" FontSize="17" FontWeight="SemiBold" />
+            <TextBlock Text="{ui:Tr TapeSubtitle}" TextWrapping="Wrap"
+                       Foreground="{StaticResource B.TextMuted}" FontSize="11.5"
+                       Margin="0,3,0,0" MaxWidth="980" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <!-- Capped for the same reason as the item table: everything after the name is a fixed
+             column, so surplus width would push the prices away from the item they price. -->
+        <Border Grid.Row="1" Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
+                BorderThickness="1" CornerRadius="{StaticResource R.Large}"
+                MaxWidth="960" HorizontalAlignment="Left">
+            <!--
+                CanContentScroll is what actually turns virtualisation on here.
+
+                A ScrollViewer defaults to scrolling its content as one lump, and under that a
+                VirtualizingStackPanel is given infinite height and dutifully realises every row -
+                two hundred of them, rebuilt on a timer. Item-based scrolling restores virtualisation
+                and pixel scroll units keep the wheel smooth rather than jumping a row at a time.
+            -->
+            <ItemsControl ItemsSource="{Binding RecentSales}" Margin="6"
+                          ScrollViewer.ScrollChanged="OnScrollChanged"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          VirtualizingPanel.ScrollUnit="Pixel">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel VirtualizationMode="Recycling" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="34" Margin="4,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" MinWidth="160" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="60" />
+                            </Grid.ColumnDefinitions>
+
+                            <ctl:ItemChip Width="22" Height="22" Corner="4" Hue="{Binding Hue}"
+                                          Monogram="{Binding Monogram}" VerticalAlignment="Center"
+                                          Margin="0,0,10,0" />
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding CountText}" Style="{StaticResource T.MonoMuted}"
+                                           Margin="7,1,0,0" />
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="2" Text="{Binding PriceText}" Style="{StaticResource T.Mono}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="{Binding UnitText}"
+                                       Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center"
+                                       ToolTip="{ui:Tr TapeUnitTip}" />
+
+                            <!-- How the print compares with the tool's own fair value: this is the
+                                 sanity check on every number the board shows. -->
+                            <TextBlock Grid.Column="4" Text="{Binding VersusValue}"
+                                       FontSize="11.5" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
+                                        <Setter Property="Foreground" Value="{StaticResource B.TextDim}" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasValue}" Value="True" />
+                                                    <Condition Binding="{Binding AboveValue}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="{StaticResource B.Profit}" />
+                                            </MultiDataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasValue}" Value="True" />
+                                                    <Condition Binding="{Binding AboveValue}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Foreground" Value="{StaticResource B.Loss}" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <TextBlock Grid.Column="5" Text="{Binding AgoText}"
+                                       Style="{StaticResource T.MonoMuted}" FontSize="10.5"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+    </Grid>
+</UserControl>

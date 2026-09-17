@@ -1,0 +1,139 @@
+<UserControl x:Class="AuctionFlipper.Ui.Views.ItemsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:AuctionFlipper.Ui"
+             xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             Background="{StaticResource B.Bg}">
+
+    <UserControl.Resources>
+        <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="18,14,18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,10">
+            <TextBlock Text="{ui:Tr ItemsTitle}" FontSize="17" FontWeight="SemiBold" />
+            <TextBlock Text="{ui:Tr ItemsSubtitle}" TextWrapping="Wrap"
+                       Foreground="{StaticResource B.TextMuted}" FontSize="11.5"
+                       Margin="0,3,0,0" MaxWidth="980" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Grid Width="240">
+                <TextBox Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
+                         ToolTip="{ui:Tr FilterBoardTip}" />
+                <TextBlock Text="{ui:Tr FilterByName}" IsHitTestVisible="False"
+                           Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11"
+                           Foreground="{StaticResource B.TextDim}"
+                           Visibility="{Binding ItemSearchText, Converter={StaticResource BoolToVis},
+                                        ConverterParameter=invert}" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Capped and left-aligned: the columns after the name are fixed, so on a wide monitor an
+             uncapped card hands the whole surplus to the name column and strands the figures against
+             the right-hand edge, a metre from the item they belong to. -->
+        <Border Grid.Row="2" Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
+                BorderThickness="1" CornerRadius="{StaticResource R.Large}"
+                MaxWidth="1180" HorizontalAlignment="Left">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Margin="16,10,16,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="170" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="22" Margin="0,0,10,0" />
+                    <TextBlock Grid.Column="1" Text="{ui:Tr ColItem}" Style="{StaticResource T.Label}" />
+                    <TextBlock Grid.Column="2" Text="{ui:Tr ColValueEach}" Style="{StaticResource T.Label}" />
+                    <TextBlock Grid.Column="3" Text="{ui:Tr ColLowestAsk}" Style="{StaticResource T.Label}" />
+                    <TextBlock Grid.Column="4" Text="{ui:Tr ColSalesSeen}" Style="{StaticResource T.Label}" />
+                    <TextBlock Grid.Column="5" Text="{ui:Tr ColAsks}" Style="{StaticResource T.Label}" />
+                    <TextBlock Grid.Column="6" Text="{ui:Tr ColSource}" Style="{StaticResource T.Label}" />
+                </Grid>
+
+                <!--
+                    CanContentScroll is what actually turns virtualisation on here.
+
+                    Without it the ScrollViewer scrolls its content as one lump, the panel inside is
+                    measured against infinite height, and all six hundred rows get realised - then
+                    rebuilt every second by the refresh timer. That was the whole of the lag on this
+                    screen. Pixel scroll units keep the wheel smooth once virtualisation is on.
+                -->
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding Items}" Margin="10,0,10,10"
+                              ScrollViewer.ScrollChanged="OnScrollChanged"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.ScrollUnit="Pixel">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          CanContentScroll="True">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel VirtualizationMode="Recycling" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="32" Margin="6,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" MinWidth="170" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+
+                                <ctl:ItemChip Width="22" Height="22" Corner="4" Hue="{Binding Hue}"
+                                              Monogram="{Binding Monogram}" VerticalAlignment="Center"
+                                              Margin="0,0,10,0" />
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ItemName}" TextTrimming="CharacterEllipsis" />
+                                    <Border Background="#22FF5C5C" CornerRadius="2" Padding="4,0" Margin="8,0,0,0"
+                                            Visibility="{Binding NbtRisk, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="{ui:Tr NbtTip}">
+                                        <TextBlock Text="NBT?" FontSize="9" Foreground="{StaticResource B.Loss}" />
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" Text="{Binding ValueText}"
+                                           Style="{StaticResource T.Mono}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{Binding LowestText}"
+                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="{Binding SalesText}"
+                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Text="{Binding AsksText}"
+                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="6" Text="{Binding SourceText}"
+                                           Style="{StaticResource T.MonoMuted}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

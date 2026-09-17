@@ -1,0 +1,593 @@
+<UserControl x:Class="AuctionFlipper.Ui.Views.FlipBoardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:AuctionFlipper.Ui"
+             xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+             Background="{StaticResource B.Bg}">
+
+    <UserControl.Resources>
+        <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- One board row. Reading order is deliberate: grade colour, then item, then the money. -->
+        <DataTemplate x:Key="FlipRowTemplate">
+            <Grid Height="52"
+                  ToolTipService.InitialShowDelay="420"
+                  ToolTipService.BetweenShowDelay="200"
+                  ToolTipService.ShowDuration="60000"
+                  ToolTipService.Placement="Mouse"
+                  ToolTipService.HorizontalOffset="18"
+                  ToolTipService.VerticalOffset="14">
+
+                <!--
+                    The hover card.
+
+                    The row is a summary and has to stay one - eleven columns at 52 px cannot also
+                    carry exact coins, where the price came from and why the score was marked down.
+                    Those live here, a hover away, so a flip can be judged without clicking into it
+                    and losing your place in a list that reorders four times a second.
+
+                    It is placed against the mouse rather than the row. A row spans the whole board,
+                    so anchoring to it put the card out at the far end - past the columns, on top of
+                    the detail panel, nowhere near the cursor that summoned it.
+
+                    A ToolTip inherits its data context from the element it is attached to, so every
+                    binding below reads the same row view model as the row itself.
+                -->
+                <Grid.ToolTip>
+                    <ToolTip Style="{StaticResource Tip.Card}">
+                        <StackPanel Width="400">
+
+                            <!-- header: what it is, and the verdict -->
+                            <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="7,7,0,0"
+                                    Padding="14,11">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ctl:ItemChip Width="34" Height="34" Corner="6" Hue="{Binding Hue}"
+                                                  Monogram="{Binding Monogram}" VerticalAlignment="Center"
+                                                  Margin="0,0,11,0" />
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding ItemName}" FontWeight="SemiBold"
+                                                       FontSize="14" TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="240" />
+                                            <TextBlock Text="{Binding CountText}" Style="{StaticResource T.MonoMuted}"
+                                                       Margin="7,3,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                            <TextBlock Text="{ui:Tr TipSeller}" Style="{StaticResource T.Label}" />
+                                            <TextBlock Text="{Binding SellerName}" Style="{StaticResource T.MonoMuted}"
+                                                       FontSize="10" Margin="6,0,0,0" MaxWidth="150"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding AgeText}" Style="{StaticResource T.MonoMuted}"
+                                                       FontSize="10" Margin="10,0,0,0" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding GradeText}"
+                                               FontFamily="{StaticResource F.Mono}" FontSize="24"
+                                               FontWeight="Bold" VerticalAlignment="Center"
+                                               Foreground="{Binding GradeBrush}" />
+                                </Grid>
+                            </Border>
+
+                            <!-- the arithmetic, in full -->
+                            <StackPanel Margin="14,12,14,4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="106" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="{ui:Tr ColBuy}" Style="{StaticResource T.Label}"
+                                               Margin="0,0,0,5" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="{Binding TipBuy}" Style="{StaticResource T.Mono}"
+                                                   FontSize="12" />
+                                        <TextBlock Text="{Binding TipBuyEach}" Style="{StaticResource T.MonoMuted}"
+                                                   FontSize="10" Margin="9,1,0,0"
+                                                   Visibility="{Binding TipBuyEach, Converter={StaticResource BoolToVis}}" />
+                                        <TextBlock Text="{ui:Tr TipEach}" Style="{StaticResource T.MonoMuted}"
+                                                   FontSize="10" Margin="4,1,0,0"
+                                                   Visibility="{Binding TipBuyEach, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Row="1" Text="{ui:Tr ColRelist}" Style="{StaticResource T.Label}"
+                                               Margin="0,0,0,5" />
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="{Binding TipSell}" Style="{StaticResource T.Mono}"
+                                                   FontSize="12" />
+                                        <TextBlock Text="{ui:Tr TipEach}" Style="{StaticResource T.MonoMuted}"
+                                                   FontSize="10" Margin="5,1,0,0" />
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Row="2" Text="{ui:Tr TipFairValue}" Style="{StaticResource T.Label}"
+                                               Margin="0,0,0,7" />
+                                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,7">
+                                        <TextBlock Text="{Binding TipFair}" Style="{StaticResource T.Mono}"
+                                                   FontSize="12" Foreground="{StaticResource B.TextMuted}" />
+                                        <TextBlock Text="{Binding TipSource}" Style="{StaticResource T.MonoMuted}"
+                                                   FontSize="10" Margin="8,1,0,0" />
+                                    </StackPanel>
+
+                                    <!-- The payday, sized to match: it is the only figure on the card
+                                         that decides anything on its own. -->
+                                    <TextBlock Grid.Row="3" Text="{ui:Tr ColNet}" Style="{StaticResource T.Label}"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding TipNet}" Style="{StaticResource T.Money}"
+                                                   FontSize="17" Foreground="{Binding NetBrush}" />
+                                        <TextBlock Text="{Binding RoiText}" Style="{StaticResource T.Mono}"
+                                                   FontSize="12" Foreground="{StaticResource B.Info}"
+                                                   Margin="10,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{StaticResource B.Border}" Margin="14,8,14,0" />
+
+                            <!-- can it actually be sold, and how sure are we -->
+                            <Grid Margin="14,10,14,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="{ui:Tr TipDemand}" Style="{StaticResource T.Label}" />
+                                    <TextBlock Text="{Binding RateText}" Style="{StaticResource T.Mono}"
+                                               FontSize="12" Margin="0,3,0,0" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{ui:Tr TipClears}" Style="{StaticResource T.Label}" />
+                                    <TextBlock Text="{Binding AbsorbText}" Style="{StaticResource T.Mono}"
+                                               FontSize="12" Margin="0,3,0,0" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{ui:Tr TipConfidence}" Style="{StaticResource T.Label}" />
+                                    <TextBlock Text="{Binding TipConfidence}" Style="{StaticResource T.Mono}"
+                                               FontSize="12" Margin="0,3,0,2" />
+                                    <ctl:MeterBar Height="4" Value="{Binding Confidence}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- every reason the score was marked down, in plain words -->
+                            <StackPanel Visibility="{Binding HasNotes, Converter={StaticResource BoolToVis}}">
+                                <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0,14,0" />
+                                <StackPanel Margin="14,10,14,4">
+                                    <TextBlock Text="{ui:Tr TipWatchOut}" Style="{StaticResource T.Label}"
+                                               Foreground="{StaticResource B.Accent}" Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding TipNotes}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse Width="3" Height="3" Fill="{StaticResource B.TextDim}"
+                                                             VerticalAlignment="Top" Margin="0,6,7,0" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource B.TextMuted}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Visibility="{Binding HasNotes, Converter={StaticResource BoolToVis},
+                                                     ConverterParameter=invert}"
+                                        Margin="14,0,14,4">
+                                <Border Height="1" Background="{StaticResource B.Border}" Margin="0,0,0,10" />
+                                <TextBlock Text="{ui:Tr TipClean}" TextWrapping="Wrap" FontSize="11"
+                                           Foreground="{StaticResource B.Profit}" />
+                            </StackPanel>
+
+                            <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="0,0,7,7"
+                                    Padding="14,7" Margin="0,8,0,0">
+                                <TextBlock Text="{ui:Tr TipClickHint}" FontSize="10" TextWrapping="Wrap"
+                                           Foreground="{StaticResource B.TextDim}" />
+                            </Border>
+                        </StackPanel>
+                    </ToolTip>
+                </Grid.ToolTip>
+
+                <!-- Fresh listings glow; the glow decays with the listing's age, so the newest
+                     opportunity on screen is always the brightest thing on it. -->
+                <Border Background="{StaticResource B.RowHot}" CornerRadius="{StaticResource R.Medium}"
+                        Opacity="{Binding Freshness}" />
+
+                <!--
+                    Every column is proportional with a floor and a ceiling on it, so a row fills
+                    whatever width the window has and still lands each figure on the same x as the
+                    row above. Auto columns are what must never be used here: an Auto column sizes
+                    to its own row's content, which changes how much space the rest are sharing, and
+                    each row then lays its money out in a slightly different place.
+
+                    The name column is the one with a ceiling on it. Past about 460 px a longer name
+                    stops earning its keep, so everything beyond that is handed to the figures, which
+                    spread out and keep the row full at any window width. The previous layout gave
+                    the leftover to a trailing spacer instead, and on a wide monitor that left a
+                    quarter of every row empty.
+                -->
+                <Grid Margin="0,0,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="2*" MinWidth="130" MaxWidth="460" />
+                        <ColumnDefinition Width="*" MinWidth="92" />
+                        <ColumnDefinition Width="*" MinWidth="92" />
+                        <ColumnDefinition Width="*" MinWidth="108" />
+                        <ColumnDefinition Width="*" MinWidth="66" />
+                        <ColumnDefinition Width="*" MinWidth="70" />
+                        <ColumnDefinition Width="*" MinWidth="104" />
+                        <ColumnDefinition Width="*" MinWidth="56" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="{Binding GradeBrush}" CornerRadius="0,2,2,0"
+                            Width="4" Margin="0,8" />
+
+                    <Grid Grid.Column="1" Margin="10,0,8,0" HorizontalAlignment="Center">
+                        <ctl:ItemChip Width="32" Height="32" Hue="{Binding Hue}"
+                                      Monogram="{Binding Monogram}" />
+                        <Border Background="{StaticResource B.Bg}" CornerRadius="3" Padding="3,0"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-4,-3"
+                                Visibility="{Binding CountText, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding CountText}" FontSize="9"
+                                       Foreground="{StaticResource B.TextMuted}" FontFamily="{StaticResource F.Mono}" />
+                        </Border>
+                    </Grid>
+
+                    <!-- The watchlist star. Filled and amber once pinned, so a glance down the
+                         column says which items you are already working. -->
+                    <Button Grid.Column="2" VerticalAlignment="Center"
+                            Command="{Binding DataContext.TogglePinCommand,
+                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            ToolTip="{Binding PinTip}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource Btn.Pin}">
+                                <Setter Property="Content" Value="&#x2606;" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                        <Setter Property="Content" Value="&#x2605;" />
+                                        <Setter Property="Foreground" Value="{StaticResource B.Accent}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- The right margin guarantees a gutter before the BUY column, so a long item
+                         name is clipped with space to spare rather than touching the next figure. -->
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center" ClipToBounds="True"
+                                Margin="2,0,14,0">
+                        <TextBlock Text="{Binding ItemName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0" ClipToBounds="True">
+                            <TextBlock Text="{Binding SellerName}" Style="{StaticResource T.MonoMuted}"
+                                       FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="110" />
+                            <TextBlock Text="{Binding UnitText}" Style="{StaticResource T.MonoMuted}"
+                                       FontSize="10" Margin="8,0,0,0" />
+                            <Border Background="#22FFB020" CornerRadius="2" Padding="4,0" Margin="8,0,0,0"
+                                    Visibility="{Binding HasBadges, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding Badges}" FontSize="9"
+                                           Foreground="{StaticResource B.Accent}" />
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DataContext.BuyLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                   Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding BuyText}" Style="{StaticResource T.Mono}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="5" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DataContext.RelistLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                   Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding SellText}" Style="{StaticResource T.Mono}"
+                                   Foreground="{StaticResource B.TextMuted}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DataContext.NetLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                   Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding NetText}" Style="{StaticResource T.Money}"
+                                   Foreground="{Binding NetBrush}" Margin="0,1,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="7" VerticalAlignment="Center">
+                        <TextBlock Text="{ui:Tr ColRoi}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding RoiText}" Style="{StaticResource T.Mono}"
+                                   Foreground="{StaticResource B.Info}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- Demand, in the same column position as everything else it competes with.
+                         ROI says how good the trade is; this says whether anyone is buying, which is
+                         the difference between a profit and a listing slot tied up for a day. -->
+                    <StackPanel Grid.Column="8" VerticalAlignment="Center">
+                        <TextBlock Text="{ui:Tr ColSoldPerHour}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding RateText}" Style="{StaticResource T.Mono}"
+                                   Foreground="{StaticResource B.TextMuted}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="9" VerticalAlignment="Center">
+                        <TextBlock Text="{ui:Tr ColConfidence}" Style="{StaticResource T.Label}" />
+                        <ctl:MeterBar Height="5" Value="{Binding Confidence}" ShowText="True" Margin="0,4,6,2" />
+                        <TextBlock Text="{Binding AbsorbText}" Style="{StaticResource T.MonoMuted}" FontSize="9.5" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="10" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding GradeText}" FontFamily="{StaticResource F.Mono}"
+                                   FontSize="15" FontWeight="Bold" HorizontalAlignment="Right"
+                                   Foreground="{Binding GradeBrush}" />
+                        <TextBlock Text="{Binding AgeText}" Style="{StaticResource T.MonoMuted}"
+                                   FontSize="10" HorizontalAlignment="Right" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="880" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition x:Name="DetailColumn" Width="392" MinWidth="260" MaxWidth="1200" />
+        </Grid.ColumnDefinitions>
+
+        <!-- toolbar -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="18,14,18,10">
+            <TextBlock Text="{Binding BoardTitle}" FontSize="17" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding BoardSubtitle}" Foreground="{StaticResource B.TextMuted}"
+                       FontSize="11.5" TextWrapping="Wrap" Margin="0,3,0,10" MaxWidth="980"
+                       HorizontalAlignment="Left" />
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{ui:Tr Sort}" Style="{StaticResource T.Label}" VerticalAlignment="Center"
+                           Margin="0,0,9,0" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr SortProfitPerHour}"
+                              IsChecked="{Binding SortIsProfitPerHour, Mode=OneWay}"
+                              Command="{Binding SetSortCommand}" CommandParameter="ProfitPerHour" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr SortNetProfit}"
+                              IsChecked="{Binding SortIsNet, Mode=OneWay}"
+                              Command="{Binding SetSortCommand}" CommandParameter="NetProfit" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr SortRoi}"
+                              IsChecked="{Binding SortIsRoi, Mode=OneWay}"
+                              Command="{Binding SetSortCommand}" CommandParameter="Roi" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr SortFastest}"
+                              IsChecked="{Binding SortIsFastest, Mode=OneWay}"
+                              Command="{Binding SetSortCommand}" CommandParameter="Fastest" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr SortNewest}"
+                              IsChecked="{Binding SortIsNewest, Mode=OneWay}"
+                              Command="{Binding SetSortCommand}" CommandParameter="Newest" />
+
+                <Border Width="1" Background="{StaticResource B.Border}" Margin="10,3,10,3" />
+
+                <TextBlock Text="{ui:Tr Prices}" Style="{StaticResource T.Label}" VerticalAlignment="Center"
+                           Margin="0,0,9,0" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr PerLot}"
+                              IsChecked="{Binding ShowPerLot, Mode=OneWay}"
+                              Command="{Binding SetUnitModeCommand}" CommandParameter="lot"
+                              ToolTip="{ui:Tr PerLotTip}" />
+                <ToggleButton Style="{StaticResource Chip.Toggle}" Content="{ui:Tr PerItem}"
+                              IsChecked="{Binding ShowPerUnit, Mode=OneWay}"
+                              Command="{Binding SetUnitModeCommand}" CommandParameter="unit"
+                              ToolTip="{ui:Tr PerItemTip}" />
+
+                <Grid Width="190" Margin="14,0,0,0">
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
+                             ToolTip="{ui:Tr FilterBoardTip}" />
+                    <TextBlock Text="{ui:Tr FilterByName}" IsHitTestVisible="False"
+                               Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{StaticResource B.TextDim}"
+                               Visibility="{Binding SearchText, Converter={StaticResource BoolToVis},
+                                            ConverterParameter=invert}" />
+                </Grid>
+                <TextBlock Text="{Binding ResultCountText}" Style="{StaticResource T.MonoMuted}"
+                           VerticalAlignment="Center" Margin="12,0,0,0" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- board -->
+        <Grid Grid.Row="1" Grid.Column="0">
+            <ListBox Margin="12,0,6,12"
+                     ItemsSource="{Binding Flips}"
+                     SelectedItem="{Binding Selected, Mode=TwoWay}"
+                     ItemTemplate="{StaticResource FlipRowTemplate}"
+                     Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     VirtualizingPanel.ScrollUnit="Pixel"
+                     HorizontalContentAlignment="Stretch">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,0,4" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Bd" Background="{StaticResource B.Surface}"
+                                            BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                            CornerRadius="{StaticResource R.Medium}" SnapsToDevicePixels="True">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush"
+                                                    Value="{StaticResource B.BorderStrong}" />
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{StaticResource B.SurfaceAlt}" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush"
+                                                    Value="{StaticResource B.Accent}" />
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{StaticResource B.SurfaceAlt}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+
+            <!-- An empty pinned tab is the normal first state, not a fault, so it says what to do. -->
+            <TextBlock Text="{Binding EmptyBoardHint}" Foreground="{StaticResource B.TextDim}"
+                       FontSize="12.5" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                       Visibility="{Binding EmptyBoardHint, Converter={StaticResource BoolToVis}}" />
+        </Grid>
+
+        <!--
+            Drag handle for the detail panel.
+
+            The column it resizes is set from the saved width in code-behind rather than bound here:
+            a two-way binding on ColumnDefinition.Width and a GridSplitter both write that property,
+            and they fight over it mid-drag.
+        -->
+        <GridSplitter x:Name="DetailSplitter" Grid.Row="1" Grid.Column="1"
+                      Width="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Margin="0,0,0,12" Background="Transparent"
+                      ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                      ShowsPreview="False" Cursor="SizeWE"
+                      ToolTip="{ui:Tr ResizeTip}">
+            <GridSplitter.Template>
+                <ControlTemplate TargetType="GridSplitter">
+                    <Border Background="Transparent">
+                        <!-- A thin grip rather than a full-height bar: the panel edge is already a
+                             border, and a second heavy line beside it just reads as clutter. -->
+                        <Border x:Name="Grip" Width="2" Height="46" CornerRadius="1"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Background="{StaticResource B.Border}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Grip" Property="Background"
+                                    Value="{StaticResource B.Accent}" />
+                            <Setter TargetName="Grip" Property="Height" Value="90" />
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="Grip" Property="Background"
+                                    Value="{StaticResource B.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </GridSplitter.Template>
+        </GridSplitter>
+
+        <!-- detail panel -->
+        <Border Grid.Row="1" Grid.Column="2" Margin="0,0,12,12"
+                Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
+                BorderThickness="1" CornerRadius="{StaticResource R.Large}">
+            <Grid>
+                <TextBlock Text="{ui:Tr DetailEmpty}"
+                           Foreground="{StaticResource B.TextDim}" TextWrapping="Wrap" FontSize="12"
+                           Margin="26" VerticalAlignment="Center" TextAlignment="Center"
+                           Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis},
+                                        ConverterParameter=invert}" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Margin="16">
+                        <TextBlock Text="{Binding DetailTitle}" FontSize="15" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding DetailSummary}" Style="{StaticResource T.MonoMuted}"
+                                   FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,12" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Button Content="{ui:Tr CopySearch}" Style="{StaticResource Btn.Accent}"
+                                    Command="{Binding CopySearchCommand}"
+                                    ToolTip="{ui:Tr CopySearchTip}" />
+                            <Button Content="{ui:Tr RefreshItem}" Margin="7,0,0,0"
+                                    Command="{Binding RefreshItemCommand}"
+                                    ToolTip="{ui:Tr RefreshItemTip}" />
+                        </StackPanel>
+
+                        <TextBlock Text="{ui:Tr PriceHistory}" Style="{StaticResource T.Label}" />
+                        <Border Background="{StaticResource B.Bg}" CornerRadius="{StaticResource R.Small}"
+                                Margin="0,5,0,14" Padding="6">
+                            <ctl:Sparkline Height="62" Points="{Binding SparkPoints}"
+                                           Reference="{Binding DetailFairValue}"
+                                           Stroke="{StaticResource B.Info}" />
+                        </Border>
+
+                        <TextBlock Text="{ui:Tr AskLadder}" Style="{StaticResource T.Label}" />
+                        <Border Background="{StaticResource B.Bg}" CornerRadius="{StaticResource R.Small}"
+                                Margin="0,5,0,14" Padding="8,6">
+                            <ctl:DepthLadder Height="230" Rungs="{Binding Ladder}"
+                                             FairValue="{Binding DetailFairValue}" />
+                        </Border>
+
+                        <TextBlock Text="{ui:Tr Contents}" Style="{StaticResource T.Label}"
+                                   Visibility="{Binding DetailHasContents, Converter={StaticResource BoolToVis}}" />
+                        <ItemsControl ItemsSource="{Binding DetailContents}" Margin="0,5,0,14"
+                                      Visibility="{Binding DetailHasContents, Converter={StaticResource BoolToVis}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <Run Text="{Binding Count, Mode=OneWay}" />
+                                            <Run Text="x" />
+                                            <Run Text="{Binding DisplayName, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                                   Text="{Binding LineValue, Mode=OneWay, StringFormat={}{0:N0}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{ui:Tr WhyThisScore}" Style="{StaticResource T.Label}" />
+                        <ItemsControl ItemsSource="{Binding DetailNotes}" Margin="0,5,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="4" Height="4" Fill="{StaticResource B.TextDim}"
+                                                 VerticalAlignment="Top" Margin="0,6,7,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                   FontSize="11" Foreground="{StaticResource B.TextMuted}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

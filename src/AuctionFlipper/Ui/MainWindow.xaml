@@ -1,0 +1,159 @@
+<Window x:Class="AuctionFlipper.Ui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:AuctionFlipper.Ui"
+        xmlns:ctl="clr-namespace:AuctionFlipper.Ui.Controls"
+        xmlns:views="clr-namespace:AuctionFlipper.Ui.Views"
+        Title="Auction Flipper - DonutSMP" Height="900" Width="1520"
+        MinHeight="640" MinWidth="1340"
+        Background="{StaticResource B.Bg}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <ui:EnumMatchConverter x:Key="EnumMatch" />
+        <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
+        <ui:FractionToWidthConverter x:Key="FractionWidth" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================ HEADER ============================ -->
+        <Border Grid.Row="0" Background="{StaticResource B.HeaderFill}"
+                BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1">
+            <Grid Margin="18,11">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="9" Height="9" Fill="{StaticResource B.Profit}" Margin="0,0,9,0">
+                        <Ellipse.Effect>
+                            <DropShadowEffect Color="#2ED47A" BlurRadius="12" ShadowDepth="0" Opacity="0.9" />
+                        </Ellipse.Effect>
+                    </Ellipse>
+                    <TextBlock Text="AUCTION FLIPPER" FontWeight="Bold" FontSize="14" />
+                    <TextBlock Text="DonutSMP" Foreground="{StaticResource B.TextDim}" FontSize="11"
+                               Margin="10,3,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Live telemetry. The tool's own request cost is on screen, not hidden. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+
+                    <StackPanel Margin="0,0,26,0" MinWidth="150">
+                        <TextBlock Text="{ui:Tr HeaderBudget}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding BudgetText}" Style="{StaticResource T.Mono}"
+                                   FontSize="12" Margin="0,2,0,3" />
+                        <ctl:BudgetGauge Height="5" PerLane="{Binding BudgetLanes}"
+                                         Limit="{Binding BudgetLimit}" HardCap="250" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,26,0" MinWidth="170">
+                        <TextBlock Text="{ui:Tr HeaderBook}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding BookText}" Style="{StaticResource T.Mono}"
+                                   FontSize="12" Margin="0,2,0,3" />
+                        <Grid Height="5">
+                            <Border Background="{StaticResource B.SurfaceRaised}" CornerRadius="2" />
+                            <Border Background="{StaticResource B.Info}" CornerRadius="2"
+                                    HorizontalAlignment="Left"
+                                    Width="{Binding SweeperCoverage, Converter={StaticResource FractionWidth},
+                                                    ConverterParameter=170, Mode=OneWay, FallbackValue=0}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,26,0" MinWidth="170">
+                        <TextBlock Text="{ui:Tr HeaderTape}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding TapeText}" Style="{StaticResource T.Mono}" FontSize="12"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,26,0" MinWidth="160">
+                        <TextBlock Text="{ui:Tr HeaderListings}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding SniperText}" Style="{StaticResource T.Mono}" FontSize="12"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel MinWidth="60">
+                        <TextBlock Text="{ui:Tr HeaderUptime}" Style="{StaticResource T.Label}" />
+                        <TextBlock Text="{Binding UptimeText}" Style="{StaticResource T.Mono}" FontSize="12"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="2" Margin="24,0,0,0" VerticalAlignment="Center" MinWidth="76"
+                        Content="{Binding PauseButtonText}" Command="{Binding TogglePauseCommand}"
+                        ToolTip="{ui:Tr PauseTip}" />
+
+            </Grid>
+        </Border>
+
+        <!-- ============================ BODY ============================ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="190" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Background="{StaticResource B.Surface}" BorderBrush="{StaticResource B.Border}"
+                    BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="14,0,14,14">
+                        <Button Content="{ui:Tr OpenDashboard}" Command="{Binding OpenDashboardCommand}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding DashboardUrl}" Style="{StaticResource T.MonoMuted}"
+                                   FontSize="10" TextAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,10,0,0">
+                        <TextBlock Text="{ui:Tr NavMarket}" Style="{StaticResource T.Label}" Margin="20,6,0,4" />
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavBoard}"
+                                     IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
+                                                 ConverterParameter=Board, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavPinned}"
+                                     IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
+                                                 ConverterParameter=Pinned, Mode=TwoWay}" />
+
+                        <TextBlock Text="{ui:Tr NavData}" Style="{StaticResource T.Label}" Margin="20,16,0,4" />
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavTape}"
+                                     IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
+                                                 ConverterParameter=Tape, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavItems}"
+                                     IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
+                                                 ConverterParameter=Items, Mode=TwoWay}" />
+
+                        <TextBlock Text="{ui:Tr NavSetup}" Style="{StaticResource T.Label}" Margin="20,16,0,4" />
+                        <RadioButton Style="{StaticResource Nav.Item}" GroupName="nav" Content="{ui:Tr NavSettings}"
+                                     IsChecked="{Binding Section, Converter={StaticResource EnumMatch},
+                                                 ConverterParameter=Settings, Mode=TwoWay}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <views:FlipBoardView Visibility="{Binding IsBoardVisible, Converter={StaticResource BoolToVis}}" />
+                <views:TapeView Visibility="{Binding IsTapeVisible, Converter={StaticResource BoolToVis}}" />
+                <views:ItemsView Visibility="{Binding IsItemsVisible, Converter={StaticResource BoolToVis}}" />
+                <views:SettingsView Visibility="{Binding IsSettingsVisible, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+        </Grid>
+
+        <!-- ============================ STATUS ============================ -->
+        <Border Grid.Row="2" Background="{StaticResource B.Surface}"
+                BorderBrush="{StaticResource B.Border}" BorderThickness="0,1,0,0">
+            <Grid Margin="16,6">
+                <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource T.MonoMuted}" />
+                <TextBlock Text="{Binding SweeperText}" Style="{StaticResource T.MonoMuted}"
+                           HorizontalAlignment="Right" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

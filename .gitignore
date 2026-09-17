@@ -1,0 +1,13 @@
+bin/
+obj/
+release/
+*.user
+.vs/
+
+# Runtime data and credentials live in %APPDATA%\AuctionFlipper, never here.
+config.json
+*.log
+*.tbl
+
+# Local agent settings.
+.claude/
