@@ -42,6 +42,17 @@ public sealed class FlipRowVm : ObservableObject
     private string _countText = "";
     public string CountText { get => _countText; private set => Set(ref _countText, value); }
 
+    /// <summary>
+    /// The lot size badge on the row's icon, which is empty while the board reads per item.
+    ///
+    /// It is not the same thing as <see cref="CountText"/>, which describes the listing and is
+    /// therefore true in either mode. This badge sits beside three money columns and is read as
+    /// their multiplier; with the columns switched to a single item it multiplied nothing and made
+    /// a 64-stack price look like a stack price.
+    /// </summary>
+    private string _lotBadge = "";
+    public string LotBadge { get => _lotBadge; private set => Set(ref _lotBadge, value); }
+
     private string _buyText = "";
     public string BuyText { get => _buyText; private set => Set(ref _buyText, value); }
 
@@ -74,6 +85,11 @@ public sealed class FlipRowVm : ObservableObject
 
     private string _ageText = "";
     public string AgeText { get => _ageText; private set => Set(ref _ageText, value); }
+
+    /// <summary>The same age as a phrase - "listed 1.6h ago" - for the cards, where a bare "1.6h"
+    /// beside a seller's name could be read as anything.</summary>
+    private string _listedText = "";
+    public string ListedText { get => _listedText; private set => Set(ref _listedText, value); }
 
     /// <summary>1 when newly listed, fading to 0 over ten minutes. Drives the row glow.</summary>
     private double _freshness;
@@ -121,8 +137,18 @@ public sealed class FlipRowVm : ObservableObject
     private string _tipBuyEach = "";
     public string TipBuyEach { get => _tipBuyEach; private set => Set(ref _tipBuyEach, value); }
 
-    private string _tipSell = "";
-    public string TipSell { get => _tipSell; private set => Set(ref _tipSell, value); }
+    /// <summary>
+    /// What the whole lot fetches when it is relisted, and what one of them fetches.
+    ///
+    /// The card used to print only the per-item resale price, which left the three money lines
+    /// unable to be read as a sum: a lot bought for 200,000 showing a resale of 7,797 and a profit
+    /// of 299,000 is three true numbers that look like a mistake.
+    /// </summary>
+    private string _tipSellTotal = "";
+    public string TipSellTotal { get => _tipSellTotal; private set => Set(ref _tipSellTotal, value); }
+
+    private string _tipSellEach = "";
+    public string TipSellEach { get => _tipSellEach; private set => Set(ref _tipSellEach, value); }
 
     private string _tipNet = "";
     public string TipNet { get => _tipNet; private set => Set(ref _tipNet, value); }
@@ -161,6 +187,7 @@ public sealed class FlipRowVm : ObservableObject
         Monogram = Format.Monogram(flip.Info.DisplayName);
         Hue = flip.Info.Hue;
         CountText = flip.Count > 1 ? $"x{flip.Count}" : "";
+        LotBadge = perUnit ? "" : CountText;
         SellerName = flip.SellerName;
         IsPinned = pinned;
 
@@ -198,18 +225,20 @@ public sealed class FlipRowVm : ObservableObject
         HasBadges = badges.Length > 0;
 
         AgeText = Format.Age(flip.AgeMs);
+        ListedText = Loc.T("TipAgo", AgeText);
         Freshness = FreshnessFor(flip.AgeMs);
 
         RateText = Format.Rate(flip.SalesPerHour);
         AbsorbText = Format.Absorb(flip.AbsorbHours);
 
-        TipBuy = Format.Exact(flip.BuyTotal);
-        TipBuyEach = count > 1 ? Format.Exact(flip.BuyUnit) : "";
-        TipSell = Format.Exact(flip.ResellUnit);
-        TipNet = Format.Exact(flip.NetProfit);
-        TipFair = Format.Exact(flip.FairUnit);
+        TipBuy = Format.Grouped(flip.BuyTotal);
+        TipBuyEach = count > 1 ? Format.Grouped(flip.BuyUnit) : "";
+        TipSellTotal = Format.Grouped(flip.ResellTotal);
+        TipSellEach = Format.Grouped(flip.ResellUnit);
+        TipNet = Format.GroupedSigned(flip.NetProfit);
+        TipFair = Format.Grouped(flip.FairUnit);
         TipSource = Format.ValueSourceLabel(flip.ValueSource);
-        TipPerHour = Format.Coins(flip.ProfitPerHour);
+        TipPerHour = Loc.T("TipPerHour", Format.Coins(flip.ProfitPerHour));
         TipConfidence = $"{flip.Confidence:0}/100";
 
         TipNotes = flip.Notes;
@@ -221,6 +250,7 @@ public sealed class FlipRowVm : ObservableObject
     {
         long age = Math.Max(0, nowUnixMs - _flip.Listing.ListedAtUnixMs);
         AgeText = Format.Age(age);
+        ListedText = Loc.T("TipAgo", AgeText);
         Freshness = FreshnessFor(age);
     }
 

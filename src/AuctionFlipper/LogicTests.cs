@@ -46,6 +46,7 @@ public static class LogicTests
         failures += Check("the icon sheet covers what the market trades", IconSheetCoversTheMarket);
         failures += Check("an item's own sale history reads newest first", ItemSaleHistoryReadsNewestFirst);
         failures += Check("the scan countdown measures the rate it sees", SweepEtaTracksTheMeasuredRate);
+        failures += Check("card money is grouped and free of dead cents", CardMoneyReadsAsCoins);
 
         Console.WriteLine(new string('-', 66));
         Console.WriteLine(failures == 0 ? "ALL LOGIC CHECKS PASSED" : $"{failures} LOGIC CHECK(S) FAILED");
@@ -782,6 +783,26 @@ public static class LogicTests
 
         bool ok = raised.Contains("minecraft:diamond") && !raised.Contains("minecraft:emerald");
         return (ok, raised.Count == 0 ? "nothing alerted at all" : $"alerted on [{string.Join(", ", raised)}]");
+    }
+
+    /// <summary>
+    /// The hover card prints the full figure rather than the board's three significant digits, and
+    /// it is the one place in the tool where a number is read digit by digit. Two decimal places on
+    /// a six-figure price are two characters of noise in front of the digits that matter, so they
+    /// are dropped above a thousand coins and kept below it, where they are the whole price.
+    /// </summary>
+    private static (bool, string) CardMoneyReadsAsCoins()
+    {
+        string lot = Format.Grouped(200_000);
+        string unit = Format.Grouped(7_796.88);
+        string small = Format.Grouped(3.5);
+        string net = Format.GroupedSigned(299_000);
+        string loss = Format.GroupedSigned(-1_250.5);
+
+        bool ok = lot == "200,000" && unit == "7,797" && small == "3.5"
+                  && net == "+299,000" && loss == "-1,251";
+
+        return (ok, $"{lot} / {unit} / {small} / {net} / {loss}");
     }
 
     // ------------------------------------------------------------------ helpers

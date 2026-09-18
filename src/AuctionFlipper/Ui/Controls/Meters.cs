@@ -89,6 +89,53 @@ public sealed class BudgetGauge : FrameworkElement
     }
 }
 
+/// <summary>
+/// A plain 0-1 progress line in a colour the caller picks.
+///
+/// It exists because the header's figures are spread across the whole width of the window and each
+/// one gets whatever share of it is left: a bar whose width is a fraction of a number baked into
+/// the XAML cannot follow a cell that resizes with the window, and one drawn here simply fills the
+/// space it is handed.
+/// </summary>
+public sealed class FillBar : FrameworkElement
+{
+    public static readonly DependencyProperty FractionProperty = DependencyProperty.Register(
+        nameof(Fraction), typeof(double), typeof(FillBar),
+        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
+        nameof(Fill), typeof(Brush), typeof(FillBar),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public double Fraction
+    {
+        get => (double)GetValue(FractionProperty);
+        set => SetValue(FractionProperty, value);
+    }
+
+    public Brush? Fill
+    {
+        get => (Brush?)GetValue(FillProperty);
+        set => SetValue(FillProperty, value);
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        double w = ActualWidth, h = ActualHeight;
+        if (w <= 2 || h <= 1) return;
+
+        var track = ColorUtil.Frozen(Color.FromRgb(0x1D, 0x24, 0x30));
+        dc.DrawRoundedRectangle(track, null, new Rect(0, 0, w, h), h / 2, h / 2);
+
+        double fraction = Math.Clamp(Fraction, 0, 1);
+        if (fraction <= 0 || Fill is null) return;
+
+        // Never thinner than it is tall, so a scan that has just started still shows a mark rather
+        // than an empty track that looks like a stalled collector.
+        dc.DrawRoundedRectangle(Fill, null, new Rect(0, 0, Math.Max(h, w * fraction), h), h / 2, h / 2);
+    }
+}
+
 /// <summary>A compact 0-100 bar, used for confidence. Colour carries the verdict.</summary>
 public sealed class MeterBar : FrameworkElement
 {

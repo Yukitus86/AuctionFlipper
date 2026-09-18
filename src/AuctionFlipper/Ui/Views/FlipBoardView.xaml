@@ -35,11 +35,19 @@
                 -->
                 <Grid.ToolTip>
                     <ToolTip Style="{StaticResource Tip.Card}">
-                        <StackPanel Width="400">
+                        <StackPanel Width="436">
 
-                            <!-- header: what it is, and the verdict -->
+                            <!--
+                                Header band: the item, who is selling it, and the verdict.
+
+                                The grade is drawn as an outlined stamp rather than a bare letter.
+                                A single glyph floating in a corner reads as decoration; boxed and
+                                tinted it reads as a rating, and it matches the grade spine on the
+                                row the card was summoned from.
+                            -->
                             <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="7,7,0,0"
-                                    Padding="14,11">
+                                    BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1"
+                                    Padding="16,13">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -47,143 +55,202 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ctl:ItemChip Width="34" Height="34" Corner="6" Hue="{Binding Hue}"
+                                    <ctl:ItemChip Width="38" Height="38" Corner="7" Hue="{Binding Hue}"
                                                   ItemId="{Binding ItemId}"
                                                   Monogram="{Binding Monogram}" VerticalAlignment="Center"
-                                                  Margin="0,0,11,0" />
+                                                  Margin="0,0,12,0" />
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding ItemName}" FontWeight="SemiBold"
-                                                       FontSize="14" TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="240" />
-                                            <TextBlock Text="{Binding CountText}" Style="{StaticResource T.MonoMuted}"
-                                                       Margin="7,3,0,0" />
+                                                       FontSize="15" TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="232" VerticalAlignment="Center" />
+                                            <Border Background="{StaticResource B.Bg}" CornerRadius="3"
+                                                    Padding="5,0,5,1" Margin="9,1,0,0" VerticalAlignment="Center"
+                                                    Visibility="{Binding CountText,
+                                                                 Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="{Binding CountText}" Style="{StaticResource T.Mono}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource B.TextMuted}" />
+                                            </Border>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                            <TextBlock Text="{ui:Tr TipSeller}" Style="{StaticResource T.Label}" />
-                                            <TextBlock Text="{Binding SellerName}" Style="{StaticResource T.MonoMuted}"
-                                                       FontSize="10" Margin="6,0,0,0" MaxWidth="150"
-                                                       TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding AgeText}" Style="{StaticResource T.MonoMuted}"
-                                                       FontSize="10" Margin="10,0,0,0" />
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock Text="{Binding SellerName}"
+                                                       Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                                       MaxWidth="150" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="&#183;" Foreground="{StaticResource B.TextDim}"
+                                                       FontSize="11" Margin="7,0,7,0" />
+                                            <TextBlock Text="{Binding ListedText}"
+                                                       Style="{StaticResource T.MonoMuted}" FontSize="11" />
                                         </StackPanel>
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="2" Text="{Binding GradeText}"
-                                               FontFamily="{StaticResource F.Mono}" FontSize="24"
-                                               FontWeight="Bold" VerticalAlignment="Center"
-                                               Foreground="{Binding GradeBrush}" />
+                                    <Border Grid.Column="2" Margin="12,0,0,0" Padding="11,1,11,3"
+                                            Background="{StaticResource B.Bg}"
+                                            CornerRadius="{StaticResource R.Medium}"
+                                            BorderBrush="{Binding GradeBrush}" BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding GradeText}"
+                                                   FontFamily="{StaticResource F.Mono}" FontSize="22"
+                                                   FontWeight="Bold" Foreground="{Binding GradeBrush}" />
+                                    </Border>
                                 </Grid>
                             </Border>
 
-                            <!-- the arithmetic, in full -->
-                            <StackPanel Margin="14,12,14,4">
+                            <!--
+                                The arithmetic, laid out as figures that add up: what leaves your
+                                pocket, what comes back, and the difference. The numbers sit in a
+                                right-aligned column of their own so the digits line up under each
+                                other and two figures can be compared without reading them; the
+                                per-item price and the price source stay outside that column, so a
+                                long note can never push a number out of line.
+                            -->
+                            <Grid Margin="16,14,16,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="118" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="{ui:Tr TipYouPay}" Style="{StaticResource T.Label}"
+                                           VerticalAlignment="Center" Margin="0,0,0,8" />
+                                <TextBlock Grid.Column="1" Text="{Binding TipBuy}" Style="{StaticResource T.Mono}"
+                                           FontSize="13.5" TextAlignment="Right" Margin="0,0,0,8" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="11,3,0,8"
+                                            Visibility="{Binding TipBuyEach, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding TipBuyEach}" Style="{StaticResource T.MonoMuted}"
+                                               FontSize="11" />
+                                    <TextBlock Text="{ui:Tr TipEach}" Foreground="{StaticResource B.TextDim}"
+                                               FontSize="11" Margin="5,0,0,0" />
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="1" Text="{ui:Tr TipYouRelist}" Style="{StaticResource T.Label}"
+                                           VerticalAlignment="Center" Margin="0,0,0,8" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TipSellTotal}"
+                                           Style="{StaticResource T.Mono}" FontSize="13.5"
+                                           TextAlignment="Right" Margin="0,0,0,8" />
+                                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="11,3,0,8">
+                                    <TextBlock Text="{Binding TipSellEach}" Style="{StaticResource T.MonoMuted}"
+                                               FontSize="11" />
+                                    <TextBlock Text="{ui:Tr TipEach}" Foreground="{StaticResource B.TextDim}"
+                                               FontSize="11" Margin="5,0,0,0" />
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="2" Text="{ui:Tr TipFairValue}" Style="{StaticResource T.Label}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TipFair}"
+                                           Style="{StaticResource T.Mono}" FontSize="13.5"
+                                           Foreground="{StaticResource B.TextMuted}" TextAlignment="Right" />
+                                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Margin="11,3,0,0">
+                                    <TextBlock Text="{ui:Tr TipEach}" Foreground="{StaticResource B.TextDim}"
+                                               FontSize="11" />
+                                    <TextBlock Text="&#183;" Foreground="{StaticResource B.TextDim}" FontSize="11"
+                                               Margin="5,0,5,0" />
+                                    <TextBlock Text="{Binding TipSource}" Style="{StaticResource T.MonoMuted}"
+                                               FontSize="11" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- The payday, in a frame of its own: it is the only figure on the card
+                                 that decides anything by itself, and the profit per hour beside it
+                                 is what ranks it against every other flip on the board. -->
+                            <Border Background="{StaticResource B.Bg}" BorderBrush="{StaticResource B.Border}"
+                                    BorderThickness="1" CornerRadius="{StaticResource R.Medium}"
+                                    Margin="16,13,16,0" Padding="13,10">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="106" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
 
-                                    <TextBlock Text="{ui:Tr ColBuy}" Style="{StaticResource T.Label}"
-                                               Margin="0,0,0,5" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="{Binding TipBuy}" Style="{StaticResource T.Mono}"
-                                                   FontSize="12" />
-                                        <TextBlock Text="{Binding TipBuyEach}" Style="{StaticResource T.MonoMuted}"
-                                                   FontSize="10" Margin="9,1,0,0"
-                                                   Visibility="{Binding TipBuyEach, Converter={StaticResource BoolToVis}}" />
-                                        <TextBlock Text="{ui:Tr TipEach}" Style="{StaticResource T.MonoMuted}"
-                                                   FontSize="10" Margin="4,1,0,0"
-                                                   Visibility="{Binding TipBuyEach, Converter={StaticResource BoolToVis}}" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{ui:Tr ColNet}" Style="{StaticResource T.Label}"
+                                                   Foreground="{StaticResource B.TextMuted}" />
+                                        <TextBlock Text="{Binding TipPerHour}" FontSize="10.5" Margin="0,4,0,0"
+                                                   Foreground="{StaticResource B.TextDim}"
+                                                   FontFamily="{StaticResource F.Mono}" />
                                     </StackPanel>
 
-                                    <TextBlock Grid.Row="1" Text="{ui:Tr ColRelist}" Style="{StaticResource T.Label}"
-                                               Margin="0,0,0,5" />
-                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="{Binding TipSell}" Style="{StaticResource T.Mono}"
-                                                   FontSize="12" />
-                                        <TextBlock Text="{ui:Tr TipEach}" Style="{StaticResource T.MonoMuted}"
-                                                   FontSize="10" Margin="5,1,0,0" />
-                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding TipNet}"
+                                               Style="{StaticResource T.Money}" FontSize="20"
+                                               Foreground="{Binding NetBrush}" TextAlignment="Right"
+                                               VerticalAlignment="Center" Margin="12,0,0,0" />
 
-                                    <TextBlock Grid.Row="2" Text="{ui:Tr TipFairValue}" Style="{StaticResource T.Label}"
-                                               Margin="0,0,0,7" />
-                                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,7">
-                                        <TextBlock Text="{Binding TipFair}" Style="{StaticResource T.Mono}"
-                                                   FontSize="12" Foreground="{StaticResource B.TextMuted}" />
-                                        <TextBlock Text="{Binding TipSource}" Style="{StaticResource T.MonoMuted}"
-                                                   FontSize="10" Margin="8,1,0,0" />
-                                    </StackPanel>
-
-                                    <!-- The payday, sized to match: it is the only figure on the card
-                                         that decides anything on its own. -->
-                                    <TextBlock Grid.Row="3" Text="{ui:Tr ColNet}" Style="{StaticResource T.Label}"
-                                               VerticalAlignment="Center" />
-                                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding TipNet}" Style="{StaticResource T.Money}"
-                                                   FontSize="17" Foreground="{Binding NetBrush}" />
+                                    <Border Grid.Column="2" Margin="12,0,0,0" Padding="8,2,8,3"
+                                            CornerRadius="{StaticResource R.Small}" BorderThickness="1"
+                                            BorderBrush="{StaticResource B.Info}" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding RoiText}" Style="{StaticResource T.Mono}"
-                                                   FontSize="12" Foreground="{StaticResource B.Info}"
-                                                   Margin="10,4,0,0" />
-                                    </StackPanel>
+                                                   FontSize="12" Foreground="{StaticResource B.Info}" />
+                                    </Border>
                                 </Grid>
-                            </StackPanel>
+                            </Border>
 
-                            <Border Height="1" Background="{StaticResource B.Border}" Margin="14,8,14,0" />
+                            <Border Height="1" Background="{StaticResource B.Border}" Margin="16,14,16,0" />
 
-                            <!-- can it actually be sold, and how sure are we -->
-                            <Grid Margin="14,10,14,12">
+                            <!-- Can it actually be sold, and how sure are we. Ruled apart rather
+                                 than spaced apart: three figures in a row with nothing between
+                                 them read as one number at a glance. -->
+                            <Grid Margin="16,12,16,13">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel>
                                     <TextBlock Text="{ui:Tr TipDemand}" Style="{StaticResource T.Label}" />
                                     <TextBlock Text="{Binding RateText}" Style="{StaticResource T.Mono}"
-                                               FontSize="12" Margin="0,3,0,0" />
+                                               FontSize="13" Margin="0,5,0,0" />
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{ui:Tr TipClears}" Style="{StaticResource T.Label}" />
-                                    <TextBlock Text="{Binding AbsorbText}" Style="{StaticResource T.Mono}"
-                                               FontSize="12" Margin="0,3,0,0" />
-                                </StackPanel>
+                                <Border Grid.Column="1" Width="1" Background="{StaticResource B.Border}"
+                                        Margin="14,1" />
 
                                 <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{ui:Tr TipClears}" Style="{StaticResource T.Label}" />
+                                    <TextBlock Text="{Binding AbsorbText}" Style="{StaticResource T.Mono}"
+                                               FontSize="13" Margin="0,5,0,0" />
+                                </StackPanel>
+
+                                <Border Grid.Column="3" Width="1" Background="{StaticResource B.Border}"
+                                        Margin="14,1" />
+
+                                <StackPanel Grid.Column="4">
                                     <TextBlock Text="{ui:Tr TipConfidence}" Style="{StaticResource T.Label}" />
                                     <TextBlock Text="{Binding TipConfidence}" Style="{StaticResource T.Mono}"
-                                               FontSize="12" Margin="0,3,0,2" />
-                                    <ctl:MeterBar Height="4" Value="{Binding Confidence}" />
+                                               FontSize="13" Margin="0,5,0,4" />
+                                    <ctl:MeterBar Height="5" Value="{Binding Confidence}" />
                                 </StackPanel>
                             </Grid>
 
                             <!-- every reason the score was marked down, in plain words -->
                             <StackPanel Visibility="{Binding HasNotes, Converter={StaticResource BoolToVis}}">
-                                <Border Height="1" Background="{StaticResource B.Border}" Margin="14,0,14,0" />
-                                <StackPanel Margin="14,10,14,4">
+                                <Border Height="1" Background="{StaticResource B.Border}" Margin="16,0" />
+                                <StackPanel Margin="16,12,16,5">
                                     <TextBlock Text="{ui:Tr TipWatchOut}" Style="{StaticResource T.Label}"
-                                               Foreground="{StaticResource B.Accent}" Margin="0,0,0,6" />
+                                               Foreground="{StaticResource B.Accent}" Margin="0,0,0,7" />
                                     <ItemsControl ItemsSource="{Binding TipNotes}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="0,0,0,4">
+                                                <Grid Margin="0,0,0,5">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
-                                                    <Ellipse Width="3" Height="3" Fill="{StaticResource B.TextDim}"
-                                                             VerticalAlignment="Top" Margin="0,6,7,0" />
+                                                    <Ellipse Width="4" Height="4"
+                                                             Fill="{StaticResource B.Accent}"
+                                                             VerticalAlignment="Top" Margin="0,6,8,0" />
                                                     <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
-                                                               FontSize="11"
+                                                               FontSize="11.5" LineHeight="16"
                                                                Foreground="{StaticResource B.TextMuted}" />
                                                 </Grid>
                                             </DataTemplate>
@@ -194,15 +261,16 @@
 
                             <StackPanel Visibility="{Binding HasNotes, Converter={StaticResource BoolToVis},
                                                      ConverterParameter=invert}"
-                                        Margin="14,0,14,4">
-                                <Border Height="1" Background="{StaticResource B.Border}" Margin="0,0,0,10" />
-                                <TextBlock Text="{ui:Tr TipClean}" TextWrapping="Wrap" FontSize="11"
-                                           Foreground="{StaticResource B.Profit}" />
+                                        Margin="16,0,16,5">
+                                <Border Height="1" Background="{StaticResource B.Border}" Margin="0,0,0,11" />
+                                <TextBlock Text="{ui:Tr TipClean}" TextWrapping="Wrap" FontSize="11.5"
+                                           LineHeight="16" Foreground="{StaticResource B.Profit}" />
                             </StackPanel>
 
                             <Border Background="{StaticResource B.SurfaceAlt}" CornerRadius="0,0,7,7"
-                                    Padding="14,7" Margin="0,8,0,0">
-                                <TextBlock Text="{ui:Tr TipClickHint}" FontSize="10" TextWrapping="Wrap"
+                                    BorderBrush="{StaticResource B.Border}" BorderThickness="0,1,0,0"
+                                    Padding="16,8" Margin="0,9,0,0">
+                                <TextBlock Text="{ui:Tr TipClickHint}" FontSize="10.5" TextWrapping="Wrap"
                                            Foreground="{StaticResource B.TextDim}" />
                             </Border>
                         </StackPanel>
@@ -250,8 +318,8 @@
                                       ItemId="{Binding ItemId}" Monogram="{Binding Monogram}" />
                         <Border Background="{StaticResource B.Bg}" CornerRadius="3" Padding="3,0"
                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-4,-3"
-                                Visibility="{Binding CountText, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding CountText}" FontSize="9"
+                                Visibility="{Binding LotBadge, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding LotBadge}" FontSize="9"
                                        Foreground="{StaticResource B.TextMuted}" FontFamily="{StaticResource F.Mono}" />
                         </Border>
                     </Grid>
@@ -557,14 +625,36 @@
                                     <TextBlock Text="{Binding Selected.CountText}"
                                                Style="{StaticResource T.MonoMuted}" Margin="8,4,0,0" />
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <TextBlock Text="{ui:Tr TipSeller}" Style="{StaticResource T.Label}" />
-                                    <TextBlock Text="{Binding Selected.SellerName}"
-                                               Style="{StaticResource T.MonoMuted}" FontSize="10"
-                                               Margin="6,0,0,0" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Selected.AgeText}"
-                                               Style="{StaticResource T.MonoMuted}" FontSize="10"
-                                               Margin="10,0,0,0" />
+                                <!--
+                                    The seller is a button, not a label: DonutSMP opens a player's
+                                    own auction house with /ah <name>, so the name is something you
+                                    act on rather than something you read. Clicking it copies the
+                                    name the way the button below copies the item's search text.
+                                -->
+                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                    <TextBlock Text="{ui:Tr TipSeller}" Style="{StaticResource T.Label}"
+                                               VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource Chip.Copy}" Margin="6,0,0,0"
+                                            Command="{Binding CopySellerCommand}"
+                                            ToolTip="{ui:Tr CopySellerTip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Selected.SellerName}"
+                                                       Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                                       MaxWidth="150" TextTrimming="CharacterEllipsis" />
+                                            <!-- Two stacked sheets, drawn rather than typed: the
+                                                 Unicode copy glyphs render as a blank box or a
+                                                 four-pixel smudge in the interface font, which
+                                                 says nothing about what the click will do. -->
+                                            <Path Stroke="{StaticResource B.TextMuted}" StrokeThickness="1"
+                                                  Margin="8,1,0,0" VerticalAlignment="Center"
+                                                  SnapsToDevicePixels="True"
+                                                  Data="M 0.5,3.5 H 6.5 V 10.5 H 0.5 Z
+                                                        M 2.5,3.5 V 0.5 H 8.5 V 8.5 H 6.5" />
+                                        </StackPanel>
+                                    </Button>
+                                    <TextBlock Text="{Binding Selected.ListedText}"
+                                               Style="{StaticResource T.MonoMuted}" FontSize="11"
+                                               Margin="9,0,0,0" VerticalAlignment="Center" />
                                 </StackPanel>
                             </StackPanel>
 

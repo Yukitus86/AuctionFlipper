@@ -169,15 +169,17 @@ sits for two days.
   though the feed is delayed. Rows glow for their first ten minutes.
 
 **Per lot / Per item** switches the three money columns between what the whole listing costs and
-what one item in it costs. Per lot is the default because that is the transaction — the auction
+what one item in it costs. The lot-size badge on the icon follows the switch: on a per-item board
+there is no stack to multiply by, so it would only make a per-item price look like a stack price. Per lot is the default because that is the transaction — the auction
 house sells a stack of 64 as one indivisible purchase. Per item is for comparing lots of different
 sizes, where the same block offered as 64 and as 16 is otherwise four numbers apart for no reason.
 Whichever way round it is, the other figure stays on the sub-line, and ROI is a ratio so it does
 not change.
 
-**Hovering a row** opens a card with everything the row had to leave out: exact coins rather than
-three significant digits, what the item is worth and whether that came from sales or from asks, how
-long the stack takes to clear, and every reason the confidence was marked down. It is there so a
+**Hovering a row** opens a card with everything the row had to leave out, laid out as figures that
+add up: what the lot costs you, what it fetches when you relist it, and the difference. Under them
+sit the fair value and where it came from, the profit per hour the ranking is built on, how long
+the stack takes to clear, and every reason the confidence was marked down. The card is there so a
 flip can be judged without clicking into it and losing your place in a list that reorders four
 times a second.
 
@@ -187,7 +189,10 @@ hide from the main feed — and they alert regardless of the grade and profit th
 per item, not per listing, so a pin survives the listing being bought.
 
 The detail panel shows the ask ladder, 24 hours of sale prices against the fair value line, and
-**Copy /ah search**, which puts the item name on the clipboard ready to paste in game. Drag the
+**Copy /ah search**, which puts the item name on the clipboard ready to paste in game. The seller's
+name in its header is a button too: clicking it copies the name, which `/ah <name>` takes in game
+to open that player's own auction house — the fastest way to tell one cheap listing from a seller
+dumping a whole stock at that price. Drag the
 handle on its left edge to resize it; the width is remembered between runs.
 
 ---
@@ -298,6 +303,36 @@ filed under "Block of Gold".
 ---
 
 ## Changelog
+
+### 1.6
+
+- **The hover card reads as arithmetic now.** It used to print what the lot cost, what one item
+  resold for and the profit on the whole lot - three true numbers that looked like a mistake next
+  to each other. It now shows what you pay, what the lot fetches when you relist it and the
+  difference, with the per-item price beside each figure rather than in place of it. The money sits
+  in a right-aligned column so the digits line up, the net profit has a frame of its own with the
+  profit per hour under it, and the demand, clearing time and confidence are ruled apart instead of
+  spaced apart.
+- **The seller's name is copyable.** DonutSMP opens a single player's auction house with
+  `/ah <name>`, so the name in the detail panel's header is a button: one click copies it. Minecraft
+  names carry underscores, digits and capitals that are easy to retype wrong, and this is the one
+  string on the panel you cannot search for.
+- **The header figures are spread across the whole width**, one column each with a rule between
+  them, instead of packed against the name with half the header left empty. The book-coverage bar
+  now stretches with its column rather than being drawn to a fixed pixel width.
+- **Answers in the status bar stay long enough to read.** The bar is also a ticker that writes the
+  average response time into it four times a second, which meant a message answering a click was on
+  screen for 250 ms. A reply to something you did now holds the bar for six seconds; errors still
+  outrank it.
+- **Money on the cards dropped its dead cents.** `200,000.00` is four characters of nothing in
+  front of the digits that matter; cents are printed below a thousand coins, where they are the
+  price, and dropped above it.
+- **The warnings count properly.** "Only 0 listing(s) sit near the target price" now reads as a
+  sentence in both languages, with its own wording for none and for one, and it says which price it
+  means.
+- **Small caps got readable.** Every label on a card or a column header moved off the dimmest grey
+  in the palette, plain tooltips gained padding, line spacing and a shadow that lifts them off the
+  row behind them, and the lot-size badge disappears from the icon when the board is read per item.
 
 ### 1.5
 

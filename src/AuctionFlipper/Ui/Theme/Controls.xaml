@@ -10,10 +10,18 @@
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
 
+    <!--
+        Small caps for every column header and every label on a card.
+
+        The colour is the muted grey rather than the dim one. Dim is the right weight for a hint
+        nobody has to read; a label that says which number you are looking at is not a hint, and at
+        ten pixels on a near-black surface the dim grey was legible only if you already knew what
+        it said.
+    -->
     <Style x:Key="T.Label" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource F.Sans}" />
         <Setter Property="FontSize" Value="{StaticResource S.FontTiny}" />
-        <Setter Property="Foreground" Value="{StaticResource B.TextDim}" />
+        <Setter Property="Foreground" Value="{StaticResource B.TextMuted}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <!-- Tracked-out small caps read as column headers without needing rules or boxes. -->
         <Setter Property="TextBlock.LineHeight" Value="12" />
@@ -360,23 +368,34 @@
         <Setter Property="FontFamily" Value="{StaticResource F.Sans}" />
         <Setter Property="FontSize" Value="{StaticResource S.FontSmall}" />
         <Setter Property="HasDropShadow" Value="False" />
-        <Setter Property="MaxWidth" Value="300" />
+        <Setter Property="MaxWidth" Value="340" />
         <!-- TextWrapping is not an inherited property, so a tooltip longer than MaxWidth would be
              cut off rather than wrapped unless the text block is supplied here. Every tooltip in
-             the app is a plain string. -->
+             the app is a plain string.
+
+             The line height is set with it: two lines of explanation set solid on a dark surface
+             are a block of grey, and these tooltips exist to be read in a hurry. -->
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding}" TextWrapping="Wrap" LineHeight="16"
+                               Foreground="{StaticResource B.Text}" />
                 </DataTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
+                    <!-- The shadow is what separates a floating panel from the surface behind it.
+                         Without it a tooltip over a row of the same colour reads as part of the
+                         row, which is exactly where a tooltip appears. -->
                     <Border Background="{StaticResource B.SurfaceAlt}"
                             BorderBrush="{StaticResource B.BorderStrong}" BorderThickness="1"
-                            CornerRadius="{StaticResource R.Small}" Padding="9,6">
+                            CornerRadius="{StaticResource R.Medium}" Padding="11,8">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="3"
+                                              Direction="270" Opacity="0.55" />
+                        </Border.Effect>
                         <ContentPresenter />
                     </Border>
                 </ControlTemplate>
@@ -401,6 +420,12 @@
                     <Border Background="{StaticResource B.Surface}"
                             BorderBrush="{StaticResource B.BorderStrong}" BorderThickness="1"
                             CornerRadius="{StaticResource R.Large}">
+                        <!-- Deeper than the plain tooltip's: this card covers half a screen of
+                             moving rows and has to sit clearly above them. -->
+                        <Border.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="26" ShadowDepth="5"
+                                              Direction="270" Opacity="0.65" />
+                        </Border.Effect>
                         <ContentPresenter />
                     </Border>
                 </ControlTemplate>
@@ -467,6 +492,44 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource B.SurfaceRaised}" />
                             <Setter TargetName="Glyph" Property="Foreground" Value="{StaticResource B.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        A value that can be copied: the seller's name, which /ah takes as an argument in game.
+
+        It has to look like a label until it is approached, or a header band turns into a row of
+        buttons; the hover outline is what says the name is worth clicking, and the cursor confirms
+        it before the click is spent.
+    -->
+    <Style x:Key="Chip.Copy" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent"
+                            BorderThickness="1" CornerRadius="{StaticResource R.Small}"
+                            Padding="6,1,6,2" SnapsToDevicePixels="True">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{StaticResource B.SurfaceRaised}" />
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{StaticResource B.BorderStrong}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{StaticResource B.Accent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

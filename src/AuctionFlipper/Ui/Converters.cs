@@ -58,22 +58,6 @@ public sealed class FractionToPercentConverter : IValueConverter
         => Binding.DoNothing;
 }
 
-/// <summary>Scales a 0-1 fraction to a pixel width against the parameter, for inline bars.</summary>
-public sealed class FractionToWidthConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        double fraction = value is double d ? Math.Clamp(d, 0, 1) : 0;
-        double max = parameter is string s && double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out double m)
-            ? m
-            : 100;
-        return fraction * max;
-    }
-
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => Binding.DoNothing;
-}
-
 /// <summary>Binds a double directly to a text box through invariant parsing.</summary>
 public sealed class DoubleTextConverter : IValueConverter
 {

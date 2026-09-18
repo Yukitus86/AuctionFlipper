@@ -190,15 +190,18 @@ public sealed class Loc : INotifyPropertyChanged
         ["EachSuffix"] = "{0} ea",
 
         // hover card
-        ["TipFairValue"] = "Fair value",
+        ["TipYouPay"] = "YOU PAY",
+        ["TipYouRelist"] = "YOU RELIST FOR",
+        ["TipFairValue"] = "FAIR VALUE",
+        ["TipPerHour"] = "{0} per hour",
         ["TipEach"] = "each",
-        ["TipSpread"] = "Spread",
-        ["TipDemand"] = "Demand",
-        ["TipClears"] = "Clears in",
-        ["TipSeller"] = "Seller",
-        ["TipListed"] = "Listed",
-        ["TipAgo"] = "{0} ago",
-        ["TipConfidence"] = "Confidence",
+        ["TipSpread"] = "SPREAD",
+        ["TipDemand"] = "DEMAND",
+        ["TipClears"] = "CLEARS IN",
+        ["TipSeller"] = "SELLER",
+        ["TipListed"] = "LISTED",
+        ["TipAgo"] = "listed {0} ago",
+        ["TipConfidence"] = "CONFIDENCE",
         ["TipWatchOut"] = "WATCH OUT FOR",
         ["TipClean"] = "Nothing against this one - clean read on a liquid item.",
         ["TipClickHint"] = "Click the row for the full order book - click the star to pin it",
@@ -207,6 +210,8 @@ public sealed class Loc : INotifyPropertyChanged
         ["DetailEmpty"] = "Select a flip to see its order book, price history and why it scored the way it did.",
         ["CopySearch"] = "Copy /ah search",
         ["CopySearchTip"] = "Copies the item name so it can be pasted straight into /ah in game",
+        ["CopySellerTip"] = "Copy the seller's name - paste it after /ah in game to see everything "
+                            + "they have listed",
         ["RefreshItem"] = "Refresh item",
         ["RefreshItemTip"] = "Spends reserved budget to re-read this item's cheapest listings",
         ["PriceHistory"] = "PRICE HISTORY (24 H OF SALES)",
@@ -351,6 +356,10 @@ public sealed class Loc : INotifyPropertyChanged
         ["StatusRefreshFailed"] = "Refresh failed: {0}",
         ["StatusLatency"] = "{0} ms average response",
         ["StatusRestored"] = "Restored {0} sales and {1} standing listings from previous sessions.",
+        ["StatusCopiedSearch"] = "Copied \"{0}\" - paste it into the auction house search.",
+        ["StatusCopiedSeller"] = "Copied {0} - open their auction house in game with /ah {0}",
+        ["StatusNoSeller"] = "This listing came through without a seller name.",
+        ["StatusCopyFailed"] = "Could not reach the clipboard - another program is holding it.",
         ["AlreadyRunning"] = "Auction Flipper is already running. Two copies share one API key and one "
                              + "settings file, so the second one is closing.",
         ["WarmStart"] = "Remember the order book between runs",
@@ -402,9 +411,13 @@ public sealed class Loc : INotifyPropertyChanged
 
         // scoring notes
         ["NoteNoSales"] = "No sales observed yet - value is inferred from the ask ladder.",
-        ["NoteFewSales"] = "Only {0} sale(s) observed for this item.",
+        ["NoteFewSales"] = "Only {0} sales observed for this item.",
+        ["NoteFewSalesOne"] = "Only one sale of this item has been seen, so the fair value rests on it alone.",
         ["NoteDispersion"] = "Sale prices scatter by {0} around the median.",
-        ["NoteThinBook"] = "Only {0} listing(s) sit near the target price.",
+        ["NoteThinBook"] = "Only {0} other listings sit near the resale price.",
+        ["NoteThinBookOne"] = "Only one other listing sits near the resale price.",
+        ["NoteThinBookNone"] = "Nothing else is listed near the resale price, so that price is an estimate "
+                               + "rather than something the market is currently paying.",
         ["NoteNbt"] = "Enchantments and custom data are not exposed by the API, so two listings of this item "
                       + "can be worth wildly different amounts.",
         ["NoteSellerWall"] = "This seller holds {0} of the 10 cheapest listings, so they are setting this price, "
@@ -504,15 +517,18 @@ public sealed class Loc : INotifyPropertyChanged
         ["EachSuffix"] = "{0} St.",
 
         // hover card
-        ["TipFairValue"] = "Fairer Wert",
+        ["TipYouPay"] = "DU ZAHLST",
+        ["TipYouRelist"] = "DU BEKOMMST",
+        ["TipFairValue"] = "FAIRER WERT",
+        ["TipPerHour"] = "{0} je Stunde",
         ["TipEach"] = "pro Stück",
-        ["TipSpread"] = "Spanne",
-        ["TipDemand"] = "Nachfrage",
-        ["TipClears"] = "Abverkauf in",
-        ["TipSeller"] = "Verkäufer",
-        ["TipListed"] = "Eingestellt",
-        ["TipAgo"] = "vor {0}",
-        ["TipConfidence"] = "Vertrauen",
+        ["TipSpread"] = "SPANNE",
+        ["TipDemand"] = "NACHFRAGE",
+        ["TipClears"] = "ABVERKAUF IN",
+        ["TipSeller"] = "VERKÄUFER",
+        ["TipListed"] = "EINGESTELLT",
+        ["TipAgo"] = "vor {0} eingestellt",
+        ["TipConfidence"] = "VERTRAUEN",
         ["TipWatchOut"] = "DARAUF ACHTEN",
         ["TipClean"] = "Nichts auszusetzen - saubere Datenlage bei einem liquiden Item.",
         ["TipClickHint"] = "Zeile anklicken für das ganze Orderbuch - Stern anklicken zum Anheften",
@@ -521,6 +537,8 @@ public sealed class Loc : INotifyPropertyChanged
         ["DetailEmpty"] = "Wähle einen Flip aus, um Orderbuch, Preisverlauf und die Begründung der Bewertung zu sehen.",
         ["CopySearch"] = "/ah-Suche kopieren",
         ["CopySearchTip"] = "Kopiert den Item-Namen, damit er direkt hinter /ah eingefügt werden kann",
+        ["CopySellerTip"] = "Verkäufernamen kopieren - im Spiel hinter /ah einfügen, um alle Angebote "
+                            + "dieses Spielers zu sehen",
         ["RefreshItem"] = "Item aktualisieren",
         ["RefreshItemTip"] = "Nutzt reserviertes Budget, um die günstigsten Angebote dieses Items neu zu lesen",
         ["PriceHistory"] = "PREISVERLAUF (24 STD. VERKÄUFE)",
@@ -667,6 +685,10 @@ public sealed class Loc : INotifyPropertyChanged
         ["StatusRefreshFailed"] = "Aktualisierung fehlgeschlagen: {0}",
         ["StatusLatency"] = "{0} ms mittlere Antwortzeit",
         ["StatusRestored"] = "{0} Verkäufe und {1} laufende Angebote aus früheren Sitzungen geladen.",
+        ["StatusCopiedSearch"] = "\"{0}\" kopiert - im Auktionshaus in die Suche einfügen.",
+        ["StatusCopiedSeller"] = "{0} kopiert - Auktionshaus im Spiel mit /ah {0} öffnen",
+        ["StatusNoSeller"] = "Zu diesem Angebot hat die API keinen Verkäufernamen geliefert.",
+        ["StatusCopyFailed"] = "Zwischenablage nicht erreichbar - ein anderes Programm hält sie gerade.",
         ["AlreadyRunning"] = "Auction Flipper läuft bereits. Zwei Kopien teilen sich einen API-Schlüssel "
                              + "und eine Einstellungsdatei, deshalb wird die zweite geschlossen.",
         ["WarmStart"] = "Orderbuch zwischen Starts merken",
@@ -719,9 +741,14 @@ public sealed class Loc : INotifyPropertyChanged
 
         // scoring notes
         ["NoteNoSales"] = "Noch keine Verkäufe beobachtet - der Wert stammt aus der Angebotsleiter.",
-        ["NoteFewSales"] = "Nur {0} Verkauf/Verkäufe für dieses Item beobachtet.",
+        ["NoteFewSales"] = "Nur {0} Verkäufe dieses Items beobachtet.",
+        ["NoteFewSalesOne"] = "Es wurde erst ein Verkauf dieses Items gesehen - der faire Wert hängt allein "
+                              + "an diesem einen Preis.",
         ["NoteDispersion"] = "Die Verkaufspreise streuen um {0} um den Median.",
-        ["NoteThinBook"] = "Nur {0} Angebot(e) liegen nahe am Zielpreis.",
+        ["NoteThinBook"] = "Nur {0} weitere Angebote liegen nahe am Wiederverkaufspreis.",
+        ["NoteThinBookOne"] = "Nur ein weiteres Angebot liegt nahe am Wiederverkaufspreis.",
+        ["NoteThinBookNone"] = "Kein weiteres Angebot liegt nahe am Wiederverkaufspreis - dieser Preis ist "
+                               + "geschätzt und nicht das, was der Markt gerade zahlt.",
         ["NoteNbt"] = "Verzauberungen und Zusatzdaten liefert die API nicht aus, deshalb können zwei Angebote "
                       + "desselben Items völlig unterschiedlich viel wert sein.",
         ["NoteSellerWall"] = "Dieser Verkäufer hält {0} der 10 günstigsten Angebote und setzt damit den Preis - "

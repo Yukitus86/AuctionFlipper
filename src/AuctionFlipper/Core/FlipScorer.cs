@@ -176,7 +176,12 @@ public sealed class FlipScorer
         else if (value.Sales.SampleCount < MarketConstants.MinSalesForConfidentValue)
         {
             confidence *= 0.55 + 0.09 * value.Sales.SampleCount;
-            notes.Add(Loc.T("NoteFewSales", value.Sales.SampleCount));
+
+            // Counted forms rather than "1 sale(s)": these notes are the tool explaining itself,
+            // and a slash in the middle of a sentence undercuts that.
+            notes.Add(value.Sales.SampleCount == 1
+                ? Loc.T("NoteFewSalesOne")
+                : Loc.T("NoteFewSales", value.Sales.SampleCount));
         }
 
         // --- how tightly this item prices ---
@@ -192,7 +197,12 @@ public sealed class FlipScorer
         {
             confidence *= 0.55 + 0.11 * depthNearValue;
             flags |= FlipFlags.ThinBook;
-            notes.Add(Loc.T("NoteThinBook", depthNearValue));
+            notes.Add(depthNearValue switch
+            {
+                0 => Loc.T("NoteThinBookNone"),
+                1 => Loc.T("NoteThinBookOne"),
+                _ => Loc.T("NoteThinBook", depthNearValue),
+            });
         }
 
         // --- hidden value the API will not show ---

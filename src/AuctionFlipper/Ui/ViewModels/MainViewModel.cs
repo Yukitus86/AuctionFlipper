@@ -118,6 +118,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _statusMessage = Loc.T("StatusStarting");
 
         CopySearchCommand = new RelayCommand(_ => CopySearchText());
+        CopySellerCommand = new RelayCommand(_ => CopySellerName());
         RefreshItemCommand = new RelayCommand(_ => _ = RefreshSelectedAsync());
         SetSortCommand = new RelayCommand(p => Sort = Enum.Parse<BoardSort>((string)p!));
         SetUnitModeCommand = new RelayCommand(p => ShowPerUnit = (string)p! == "unit");
@@ -148,6 +149,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<SaleDetailRowVm> ItemSales { get; } = [];
 
     public RelayCommand CopySearchCommand { get; }
+    public RelayCommand CopySellerCommand { get; }
     public RelayCommand RefreshItemCommand { get; }
     public RelayCommand SetSortCommand { get; }
     public RelayCommand SetUnitModeCommand { get; }
@@ -483,6 +485,25 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _statusMessage;
     public string StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
 
+    /// <summary>
+    /// Until when the status bar belongs to something the user did.
+    ///
+    /// The bar is a ticker: every refresh writes the average response time into it, four times a
+    /// second. A message written in answer to a click - what was copied, what was saved - was
+    /// therefore on screen for 250 ms, which is long enough to see a flicker and not long enough
+    /// to read a word, so an answer holds the bar for a few seconds before the ticker resumes.
+    /// </summary>
+    private long _noticeUntilMs;
+
+    private const long NoticeHoldMs = 6_000;
+
+    /// <summary>Answers a user action in the status bar, and keeps the answer readable.</summary>
+    private void Notice(string message)
+    {
+        StatusMessage = message;
+        _noticeUntilMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + NoticeHoldMs;
+    }
+
     private string _resultCountText = "";
     public string ResultCountText { get => _resultCountText; private set => Set(ref _resultCountText, value); }
 
@@ -601,9 +622,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         UptimeText = Format.Duration(status.Uptime);
         UpdateWarmup(status);
 
-        StatusMessage = status.LastError is { Length: > 0 } error
-            ? error
-            : Loc.T("StatusLatency", status.AverageLatencyMs.ToString("0"));
+        // An error outranks whatever the user was last told: it is the one thing in this bar that
+        // is not a receipt for something they already know they did.
+        if (status.LastError is { Length: > 0 } error)
+        {
+            StatusMessage = error;
+            _noticeUntilMs = 0;
+        }
+        else if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() >= _noticeUntilMs)
+        {
+            StatusMessage = Loc.T("StatusLatency", status.AverageLatencyMs.ToString("0"));
+        }
 
         if (_tickCounter % 40 == 0)
         {
@@ -1036,7 +1065,33 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private void CopySearchText()
     {
         if (_selected is null) return;
-        TryCopy(_selected.Flip.SearchText);
+
+        string search = _selected.Flip.SearchText;
+        Notice(TryCopy(search) ? Loc.T("StatusCopiedSearch", search) : Loc.T("StatusCopyFailed"));
+    }
+
+    /// <summary>
+    /// Copies the seller's name.
+    ///
+    /// DonutSMP opens a single player's auction house with /ah &lt;name&gt;, which is the fastest way
+    /// to see whether the listing in front of you is one cheap item or a seller dumping a whole
+    /// stock at that price - and it is the one string on the card that cannot be retyped reliably,
+    /// since Minecraft names carry underscores, digits and capitals that are easy to get wrong.
+    /// </summary>
+    private void CopySellerName()
+    {
+        if (_selected is null) return;
+
+        string seller = _selected.Flip.SellerName;
+
+        // The API leaves the seller out of some listings and the market state stores those as "?".
+        if (seller.Length == 0 || seller == "?")
+        {
+            Notice(Loc.T("StatusNoSeller"));
+            return;
+        }
+
+        Notice(TryCopy(seller) ? Loc.T("StatusCopiedSeller", seller) : Loc.T("StatusCopyFailed"));
     }
 
     /// <summary>
@@ -1069,11 +1124,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         try
         {
             int added = await _coordinator.RefreshItemAsync(itemId, CancellationToken.None);
-            StatusMessage = Loc.T("StatusRefreshed", itemId, added);
+            Notice(Loc.T("StatusRefreshed", itemId, added));
         }
         catch (Exception ex)
         {
-            StatusMessage = Loc.T("StatusRefreshFailed", ex.Message);
+            Notice(Loc.T("StatusRefreshFailed", ex.Message));
         }
     }
 
@@ -1088,13 +1143,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             StatusMessage = Loc.T("StatusStopping");
             await _coordinator.StopAsync();
             Paused = true;
-            StatusMessage = Loc.T("StatusPaused");
+            Notice(Loc.T("StatusPaused"));
         }
         else
         {
             _coordinator.Start();
             Paused = false;
-            StatusMessage = Loc.T("StatusResumed");
+            Notice(Loc.T("StatusResumed"));
         }
 
         Raise(nameof(PauseButtonText));
@@ -1106,7 +1161,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         Config.Save();
         _coordinator.ApplyConfig(Config);
-        StatusMessage = Loc.T("StatusSaved", AppConfig.ConfigPath);
+        Notice(Loc.T("StatusSaved", AppConfig.ConfigPath));
         RefreshBoard();
     }
 

@@ -31,7 +31,21 @@ public static class Format
     /// <summary>Same as <see cref="Coins"/> but always carries a sign, for profit figures.</summary>
     public static string Signed(double value) => (value >= 0 ? "+" : "") + Coins(value);
 
-    public static string Exact(double value) => value.ToString("N2", CultureInfo.InvariantCulture);
+    /// <summary>
+    /// The full figure, grouped, for the hover card and the detail panel.
+    ///
+    /// Cents are printed only below a thousand coins. Above it they are noise that pushes the
+    /// digits that matter further from the eye - "200,000.00" spends four characters saying
+    /// nothing, and a card full of them reads as a wall rather than as three numbers that add up.
+    /// </summary>
+    public static string Grouped(double value)
+    {
+        double abs = Math.Abs(value);
+        return value.ToString(abs >= 1000 ? "#,##0" : "#,##0.##", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Same figure, always signed, for profit lines.</summary>
+    public static string GroupedSigned(double value) => (value >= 0 ? "+" : "") + Grouped(value);
 
     public static string Percent(double fraction) => (fraction * 100).ToString("0.#") + "%";
 

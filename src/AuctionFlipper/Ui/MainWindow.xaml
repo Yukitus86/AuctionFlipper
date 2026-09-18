@@ -14,7 +14,6 @@
     <Window.Resources>
         <ui:EnumMatchConverter x:Key="EnumMatch" />
         <ui:BoolToVisibilityConverter x:Key="BoolToVis" />
-        <ui:FractionToWidthConverter x:Key="FractionWidth" />
     </Window.Resources>
 
     <Grid>
@@ -32,6 +31,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -46,60 +46,82 @@
 
                     <!-- Rule between the name and the numbers, so the two read as separate things
                          rather than as one long line of header. -->
-                    <Border Width="1" Height="30" Background="{StaticResource B.Border}"
+                    <Border Width="1" Height="36" Background="{StaticResource B.BorderStrong}"
                             Margin="20,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <!-- Live telemetry. The tool's own request cost is on screen, not hidden.
+                <!--
+                    Live telemetry. The tool's own request cost is on screen, not hidden.
 
-                     Left-aligned, next to the name: these are the figures that say whether the tool
-                     is keeping up, and they are read constantly. Pushed out to the right edge of a
-                     wide monitor they sat as far from the eye as the layout allowed. -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left"
-                            VerticalAlignment="Center" Margin="20,0,0,0">
+                    The five figures are spread across the whole header rather than packed beside
+                    the name. On a wide monitor the packed version left half the header empty and
+                    the numbers crowded into a third of it; given a column each they get room for
+                    their bars and the eye lands on one figure at a time. Rules between them do the
+                    separating, so the cells need no boxes and no extra colour.
+                -->
+                <Grid Grid.Column="1" VerticalAlignment="Center" Margin="20,0,4,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Margin="0,0,26,0" MinWidth="150">
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{ui:Tr HeaderBudget}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding BudgetText}" Style="{StaticResource T.Mono}"
-                                   FontSize="12" Margin="0,2,0,3" />
+                                   FontSize="12" Margin="0,3,0,4" />
                         <ctl:BudgetGauge Height="5" PerLane="{Binding BudgetLanes}"
                                          Limit="{Binding BudgetLimit}" HardCap="250" />
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,26,0" MinWidth="170">
+                    <Border Grid.Column="1" Width="1" Height="36" Margin="18,0"
+                            Background="{StaticResource B.BorderStrong}" VerticalAlignment="Center" />
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <TextBlock Text="{ui:Tr HeaderBook}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding BookText}" Style="{StaticResource T.Mono}"
-                                   FontSize="12" Margin="0,2,0,3" />
-                        <Grid Height="5">
-                            <Border Background="{StaticResource B.SurfaceRaised}" CornerRadius="2" />
-                            <Border Background="{StaticResource B.Info}" CornerRadius="2"
-                                    HorizontalAlignment="Left"
-                                    Width="{Binding SweeperCoverage, Converter={StaticResource FractionWidth},
-                                                    ConverterParameter=170, Mode=OneWay, FallbackValue=0}" />
-                        </Grid>
+                                   FontSize="12" Margin="0,3,0,4" />
+                        <ctl:FillBar Height="5" Fraction="{Binding SweeperCoverage}"
+                                     Fill="{StaticResource B.Info}" />
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,26,0" MinWidth="170">
+                    <Border Grid.Column="3" Width="1" Height="36" Margin="18,0"
+                            Background="{StaticResource B.BorderStrong}" VerticalAlignment="Center" />
+
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
                         <TextBlock Text="{ui:Tr HeaderTape}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding TapeText}" Style="{StaticResource T.Mono}" FontSize="12"
-                                   Margin="0,2,0,0" />
+                                   Margin="0,3,0,0" />
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,26,0" MinWidth="160">
+                    <Border Grid.Column="5" Width="1" Height="36" Margin="18,0"
+                            Background="{StaticResource B.BorderStrong}" VerticalAlignment="Center" />
+
+                    <StackPanel Grid.Column="6" VerticalAlignment="Center">
                         <TextBlock Text="{ui:Tr HeaderListings}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding SniperText}" Style="{StaticResource T.Mono}" FontSize="12"
-                                   Margin="0,2,0,0" />
+                                   Margin="0,3,0,0" />
                     </StackPanel>
+
+                    <Border Grid.Column="7" Width="1" Height="36" Margin="18,0"
+                            Background="{StaticResource B.BorderStrong}" VerticalAlignment="Center" />
 
                     <!-- Uptime, and under it how long the tool still needs before the board is
                          complete. The scan is the slow part of starting up, and without this the
                          only way to judge whether a thin-looking board meant a quiet market or an
                          unfinished scan was to watch the progress figure in the status bar. -->
-                    <StackPanel MinWidth="152" ToolTip="{ui:Tr WarmupTip}">
+                    <StackPanel Grid.Column="8" VerticalAlignment="Center" ToolTip="{ui:Tr WarmupTip}">
                         <TextBlock Text="{ui:Tr HeaderUptime}" Style="{StaticResource T.Label}" />
                         <TextBlock Text="{Binding UptimeText}" Style="{StaticResource T.Mono}" FontSize="12"
-                                   Margin="0,2,0,0" />
-                        <TextBlock Text="{Binding WarmupText}" FontSize="10" Margin="0,3,0,0">
+                                   Margin="0,3,0,0" />
+                        <TextBlock Text="{Binding WarmupText}" FontSize="10" Margin="0,3,0,0"
+                                   TextTrimming="CharacterEllipsis">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource T.Mono}">
                                     <Setter Property="Foreground" Value="{StaticResource B.Accent}" />
@@ -112,9 +134,12 @@
                             </TextBlock.Style>
                         </TextBlock>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
 
-                <Button Grid.Column="2" Margin="24,0,0,0" VerticalAlignment="Center" MinWidth="76"
+                <Border Grid.Column="2" Width="1" Height="36" Margin="8,0,20,0"
+                        Background="{StaticResource B.BorderStrong}" VerticalAlignment="Center" />
+
+                <Button Grid.Column="3" Margin="0" VerticalAlignment="Center" MinWidth="82"
                         Content="{Binding PauseButtonText}" Command="{Binding TogglePauseCommand}"
                         ToolTip="{ui:Tr PauseTip}" />
 
